@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+name=onnxruntime-osx-arm64-1.30.0
+checksum=6ebb5062a934537c352937821f9fe9718e7de1a2db1122a93dd363ffd53a7012
+archive="$root/build/deps/$name.tgz"
+mkdir -p "$root/build/deps"
+if [ ! -f "$archive" ] || [ "$(/usr/bin/shasum -a 256 "$archive" | /usr/bin/awk '{print $1}')" != "$checksum" ]; then
+  /usr/bin/curl --fail --show-error --location --retry 3 \
+    "https://github.com/microsoft/onnxruntime/releases/download/v1.30.0/$name.tgz" -o "$archive.part"
+  actual=$(/usr/bin/shasum -a 256 "$archive.part" | /usr/bin/awk '{print $1}')
+  if [ "$actual" != "$checksum" ]; then
+    rm -f "$archive.part"
+    echo 'ONNX Runtime checksum mismatch' >&2
+    exit 1
+  fi
+  mv "$archive.part" "$archive"
+fi
+/usr/bin/tar -xzf "$archive" -C "$root/build/deps"
+printf 'C++ ONNX Runtime ready: %s\n' "$root/build/deps/$name"

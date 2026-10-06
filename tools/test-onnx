@@ -1,0 +1,72 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$root"
+export PYTORCH_ENABLE_MPS_FALLBACK=0
+runtime="$root/build/deps/onnxruntime-osx-arm64-1.30.0"
+if [ ! -f "$runtime/lib/libonnxruntime.dylib" ]; then
+  echo 'Run ./tools/fetch-onnxruntime once to provide the optional C++ test runtime' >&2
+  exit 1
+fi
+mkdir -p build/logs
+torch_prefix=${LIBTORCH_PREFIX:-$(brew --prefix pytorch)}
+cmake -S . -B build/native -G Ninja "-DCMAKE_PREFIX_PATH=$torch_prefix" \
+  "-DSPUTNIK_ROOT=${SPUTNIK_ROOT:-$root/../sputnik-lang}" \
+  "-DGLOO_INCLUDE_DIR=$root/build/deps/gloo-74cc005ae13f69c11d8a41e50b42025b6730e796" \
+  "-DONNXRUNTIME_ROOT=$runtime" -DCMAKE_BUILD_TYPE=Release
+cmake --build build/native --target sputniktorch_onnx_runtime -j 3
+run_without_python() {
+  name=$1
+  shift
+  if ! DYLD_PRINT_LIBRARIES=1 PATH=/nonexistent "$@" 2>"build/logs/onnx-$name-dylibs.log"; then
+    tail -80 "build/logs/onnx-$name-dylibs.log" >&2
+    exit 1
+  fi
+  if /usr/bin/grep -E 'libpython[0-9.]|/Python.framework/|libtorch_python' "build/logs/onnx-$name-dylibs.log"; then
+    echo 'FAIL ONNX test loaded a Python runtime library' >&2
+    exit 1
+  fi
+}
+validate_cases() {
+  device=$1
+  for name in identity math layout types task attention causal normalization activations padding pooling transpose_conv; do
+    prefix="build/onnx-$device-$name"
+    run_without_python "$device-$name" ./build/native/sputniktorch_onnx_runtime "$prefix.onnx" "$prefix.pt"
+  done
+  for name in mha gru lstm; do
+    prefix="build/onnx-$device-$name"
+    run_without_python "$device-$name" ./build/native/sputniktorch_onnx_runtime "$prefix.onnx" "$prefix.pt" 2
+  done
+}
+./tools/build tests/onnx.s --run-vm >build/logs/vm-onnx.log 2>&1
+./tools/build tests/onnx.s >build/logs/build-onnx.log 2>&1
+run_without_python mnist ./build/sputnik/sputniktorch.onnx_test
+run_without_python mnist-runtime ./build/native/sputniktorch_onnx_runtime build/mnist.onnx build/mnist-onnx-reference.pt
+./tools/build tests/onnx_operators.s --run-vm >build/logs/vm-onnx-operators.log 2>&1
+validate_cases cpu
+./tools/build tests/onnx_operators.s >build/logs/build-onnx-operators.log 2>&1
+run_without_python operators ./build/sputnik/sputniktorch.onnx_operators_test
+validate_cases cpu
+./tools/build tests/onnx_regression.s --run-vm >build/logs/vm-onnx-regression.log 2>&1
+./tools/build tests/onnx_regression.s >build/logs/build-onnx-regression.log 2>&1
+run_without_python regression ./build/sputnik/sputniktorch.onnx_regression_test
+if [ "${1:-}" = --mps ]; then
+  ./tools/build tests/onnx_mps.s >build/logs/build-onnx-mps.log 2>&1
+  run_without_python mps ./build/sputnik/sputniktorch.onnx_mps_test
+  validate_cases mps
+  ./tools/build tests/onnx_regression_mps.s >build/logs/build-onnx-regression-mps.log 2>&1
+  run_without_python regression-mps ./build/sputnik/sputniktorch.onnx_regression_mps_test
+fi
+if [ -f build/mnist-resnet.pt ]; then
+  ./tools/build examples/export_mnist.s >build/logs/build-export-mnist.log 2>&1
+  run_without_python trained ./build/sputnik/sputniktorch.export_mnist_example
+  run_without_python trained-runtime ./build/native/sputniktorch_onnx_runtime \
+    build/mnist-trained.onnx build/mnist-trained-reference.pt
+  if [ "${1:-}" = --mps ]; then
+    run_without_python trained-mps ./build/sputnik/sputniktorch.export_mnist_example \
+      --device mps --output build/mnist-trained-mps.onnx --references build/mnist-trained-mps-reference.pt
+    run_without_python trained-mps-runtime ./build/native/sputniktorch_onnx_runtime \
+      build/mnist-trained-mps.onnx build/mnist-trained-mps-reference.pt
+  fi
+fi
+printf '%s\n' 'PASS ONNX export + independent C++ runtime validation'

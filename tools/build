@@ -1,0 +1,26 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+entry=tests/cpu.s
+mode=native
+fetch=OFF
+probes=OFF
+torch_prefix=${LIBTORCH_PREFIX:-}
+sputnik_root=${SPUTNIK_ROOT:-"$root/../sputnik-lang"}
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --run-vm) mode=vm ;;
+    --prepare-notebook) mode=notebook ;;
+    --fetch-deps) fetch=ON ;;
+    --probes) probes=ON ;;
+    --torch-prefix) shift; torch_prefix=$1 ;;
+    --sputnik-root) shift; sputnik_root=$1 ;;
+    --help) echo 'usage: tools/build [entry.s] [--run-vm | --prepare-notebook] [--fetch-deps] [--probes] [--torch-prefix PATH] [--sputnik-root PATH]'; exit 0 ;;
+    --*) echo "unknown option: $1" >&2; exit 2 ;;
+    *) entry=$1 ;;
+  esac
+  shift
+done
+if [ -z "$torch_prefix" ]; then torch_prefix=$(brew --prefix pytorch); fi
+exec cmake "-DROOT=$root" "-DENTRY=$entry" "-DMODE=$mode" "-DFETCH_DEPS=$fetch" \
+  "-DPROBES=$probes" "-DTORCH_PREFIX=$torch_prefix" "-DSPUTNIK_ROOT=$sputnik_root" -P "$root/cmake/BuildSputnik.cmake"

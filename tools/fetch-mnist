@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+destination=${1:-"$root/build/datasets/mnist"}
+mkdir -p "$destination"
+fetch() {
+  filename=$1
+  checksum=$2
+  archive="$destination/$filename.gz"
+  if [ ! -f "$archive" ] || [ "$(/sbin/md5 -q "$archive")" != "$checksum" ]; then
+    temporary="$archive.part"
+    /usr/bin/curl --fail --show-error --location --retry 3 \
+      "https://ossci-datasets.s3.amazonaws.com/mnist/$filename.gz" -o "$temporary"
+    if [ "$(/sbin/md5 -q "$temporary")" != "$checksum" ]; then
+      rm -f "$temporary"
+      echo "MNIST checksum mismatch: $filename" >&2
+      exit 1
+    fi
+    mv "$temporary" "$archive"
+  fi
+  /usr/bin/gzip -dc "$archive" >"$destination/$filename.part"
+  mv "$destination/$filename.part" "$destination/$filename"
+}
+# Canonical MNIST checksums, also used by torchvision.datasets.MNIST.
+fetch train-images-idx3-ubyte f68b3c2dcbeaaa9fbdd348bbdeb94873
+fetch train-labels-idx1-ubyte d53e105ee54ea40749a09fcbcd1e9432
+fetch t10k-images-idx3-ubyte 9fb629c4189551a2d022fa330f9573f3
+fetch t10k-labels-idx1-ubyte ec29112dd5afa0611ce80d1b7f02629c
+printf 'MNIST ready: %s\n' "$destination"

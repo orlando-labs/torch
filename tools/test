@@ -1,0 +1,72 @@
+#!/bin/sh
+set -eu
+export PYTORCH_ENABLE_MPS_FALLBACK=0
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$root"
+mkdir -p build/logs
+run_without_python() {
+  executable=$1
+  dylib_log=$2
+  shift 2
+  if ! DYLD_PRINT_LIBRARIES=1 PATH=/nonexistent "$executable" "$@" 2>"$dylib_log"; then
+    tail -80 "$dylib_log" >&2
+    exit 1
+  fi
+  if /usr/bin/grep -E 'libpython[0-9.]|/Python.framework/|libtorch_python' "$dylib_log"; then
+    echo 'FAIL an executable loaded a Python runtime library' >&2
+    exit 1
+  fi
+}
+./tools/build tests/cpu.s --probes >build/logs/build-cpu.log 2>&1
+./build/native/sputniktorch_probe cpu
+./build/native/sputniktorch_checkpoint_fixtures build/fixtures
+run_without_python ./build/sputnik/sputniktorch.cpu_test build/logs/cpu-dylibs.log
+./tools/build tests/cpu.s --run-vm >build/logs/vm-cpu.log 2>&1
+cat build/logs/vm-cpu.log
+./tools/build tests/modular_imports.s --run-vm >build/logs/vm-modules.log 2>&1
+cat build/logs/vm-modules.log
+./tools/build tests/direct_tensor_import.s --run-vm >build/logs/vm-direct-import.log 2>&1
+cat build/logs/vm-direct-import.log
+for module_test in idioms auto_registration nn_catalog nn_families training data_loader materialization; do
+  ./tools/build "tests/$module_test.s" --run-vm >"build/logs/vm-$module_test.log" 2>&1
+  cat "build/logs/vm-$module_test.log"
+  ./tools/build "tests/$module_test.s" >"build/logs/build-$module_test.log" 2>&1
+  PATH=/nonexistent "./build/sputnik/sputniktorch.${module_test}_test"
+done
+./tools/build tests/serialization.s >build/logs/build-serialization.log 2>&1
+PATH=/nonexistent ./build/sputnik/sputniktorch.serialization_test
+./build/native/sputniktorch_checkpoint_fixtures verify build/fixtures/sputnik.pt
+./tools/build tests/distributed.s >build/logs/build-distributed.log 2>&1
+./build/native/sputniktorch-run --nproc 2 --timeout 60 ./build/sputnik/sputniktorch.distributed_test
+./tools/build tests/distributed_errors.s >build/logs/build-distributed-errors.log 2>&1
+./build/native/sputniktorch-run --nproc 2 --timeout 30 ./build/sputnik/sputniktorch.distributed_errors_test
+./tools/build tests/distributed_errors.s --run-vm >build/logs/vm-distributed-errors-bootstrap.log 2>&1 && {
+  echo 'FAIL distributed initialization without launcher must fail' >&2; exit 1
+}
+/usr/bin/grep -q 'missing launcher variable: RANK' build/logs/vm-distributed-errors-bootstrap.log
+./build/native/sputniktorch-run --nproc 2 --timeout 30 "${SPUTNIK_ROOT:-../sputnik-lang}/build/sputnik" run "$root/build/sputniktorch.distributed_errors_test.build.json" --grant ffi
+if ./build/native/sputniktorch-run --nproc 2 /usr/bin/false; then
+  echo 'FAIL launcher must propagate worker failure' >&2; exit 1
+fi
+if ./build/native/sputniktorch-run --nproc 2 --timeout 1 /bin/sleep 10; then
+  echo 'FAIL launcher must enforce timeout' >&2; exit 1
+fi
+if [ "${1:-}" = --mps ]; then
+  PATH=/nonexistent ./build/sputnik/sputniktorch.materialization_test --device mps
+  ./tools/build tests/mps.s >build/logs/build-mps.log 2>&1
+  ./build/native/sputniktorch_probe mps
+  PATH=/nonexistent ./build/sputnik/sputniktorch.mps_test
+  for module_test in nn training; do
+    ./tools/build "tests/${module_test}_mps.s" >"build/logs/build-$module_test-mps.log" 2>&1
+    PATH=/nonexistent "./build/sputnik/sputniktorch.${module_test}_mps_test"
+  done
+  ./tools/build examples/showcase.s >build/logs/build-showcase.log 2>&1
+  if [ -f build/datasets/mnist/train-images-idx3-ubyte ]; then
+    run_without_python ./build/sputnik/sputniktorch.showcase build/logs/showcase-dylibs.log \
+      --epochs 1 --train-limit 256 --test-limit 128 --batch-size 64 \
+      --checkpoint build/mnist-suite-smoke.pt
+  else
+    echo 'MNIST runtime smoke skipped: run ./tools/fetch-mnist to supply the dataset'
+  fi
+fi
+printf '%s\n' 'PASS sputniktorch test suite'
