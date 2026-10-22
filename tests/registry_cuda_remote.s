@@ -48,7 +48,7 @@ def main():
     source = fs.read_text(args[:source])
     lock = fs.read_text(args[:lock])
     raise ArgumentError("expected canonical package and native variant in lock") unless lock.contains?("slowpilot/torch") and lock.contains?("cu130-prebuilt-source-runtime") and lock.contains?("sha256:")
-    document = {format: "sputnik-notebook", version: 1, title: "Published SputnikTorch CUDA", active_sheet: "main", sheets: [{id: "main", title: "CUDA", cells: [{id: "1", kind: "code", source: source, mode: "manual"}]}], modules: [], auto_imports: []}
+    document = {format: "sputnik-notebook", version: 1, title: "Published Torch CUDA", active_sheet: "main", sheets: [{id: "main", title: "CUDA", cells: [{id: "1", kind: "code", source: source, mode: "manual"}]}], modules: [], auto_imports: []}
     uploaded = api.request("PUT", route, {command_id: SecureRandom.hex(16), base_revision: null, document: Json.generate(document), files: {"sputnik.lock": Base64.encode(lock.bytes)}})
     settings = api.request("GET", route + "/worker-settings/main")
     api.request("PUT", route + "/worker-settings/main", {command_id: SecureRandom.hex(16), base_version: settings[:version], runtime_epoch: settings[:runtime_epoch], grants: ["ffi.call", "ffi.load"]})

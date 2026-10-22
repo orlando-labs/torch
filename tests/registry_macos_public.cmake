@@ -10,6 +10,7 @@ endforeach()
 file(MAKE_DIRECTORY "${WORK}")
 function(run_logged label)
   execute_process(COMMAND ${ARGN} RESULT_VARIABLE status
+    WORKING_DIRECTORY "${WORK}"
     OUTPUT_FILE "${WORK}/${label}.log" ERROR_FILE "${WORK}/${label}.error")
   if(NOT status EQUAL 0)
     file(READ "${WORK}/${label}.error" error)
