@@ -1,4 +1,4 @@
-package sputniktorch.device
+package torch.device
 
 export Device, device_text
 

@@ -26,13 +26,16 @@ def realm(path):
         # Native links the bridge into the executable; VM loads its dylib.
         # Attribute both C ABI functions and inlined bridge helpers equally.
         function = frame.split(" (in ", 1)[0].strip()
-        if function.startswith(("amt_", "sputniktorch::")):
-            return "Sputniktorch bridge"
+        if function.startswith(("amt_", "torch::")):
+            return "Torch bridge"
         binary = match[1]
-        if binary.startswith(("sputnik", "sputniktorch.mnist_", "sputniktorch.ffi_calls")):
-            return "Sputnik runtime"
+        # The extension also starts with "sputnik". Check its exact name
+        # before the executable prefix so its C++ helpers and allocations
+        # are not charged to the VM.
         if binary == "sputnik_manifest_extensions.dylib":
-            return "Sputniktorch bridge"
+            return "Torch bridge"
+        if binary.startswith(("sputnik", "torch.mnist_", "torch.ffi_calls")):
+            return "Sputnik runtime"
         if binary.startswith(("libtorch", "libc10", "libshm")):
             return "LibTorch"
         if binary.startswith(("AGX", "Metal", "MPS", "IOGPU", "AppleNeural")):

@@ -1,9 +1,10 @@
-package sputniktorch.onnx_operator_model
+package torch.onnx_operator_model
 
-import sputniktorch
+import torch
 import task
-from sputniktorch.nn import Module
-from sputniktorch.nn.functional import scaled_dot_product_attention
+from torch.nn import Module
+from torch.nn.functional import scaled_dot_product_attention
+from torch.backends import execution_batch
 
 export OperatorModel
 
@@ -18,7 +19,7 @@ class OperatorModel < Module:
       when "layout":
         y = x.unsqueeze(1).squeeze(dim: 1).transpose(1, 2)
         (x.flatten(), x.flatten(start_dim: 0, end_dim: 1), y,
-          x.narrow(0, -1, 1), sputniktorch.cat([x, x], dim: 1), sputniktorch.stack([x, x], dim: 1))
+          x.narrow(0, -1, 1), torch.cat([x, x], dim: 1), torch.stack([x, x], dim: 1))
       when "types":
         y = x * 0.5
         (y, x.gt(0.5), x.eq(1), x.argmax(dim: 1), x.to(dtype: "float32", device: x.device))
@@ -29,4 +30,6 @@ class OperatorModel < Module:
       when "task":
         child = task.spawn: x.square + 1
         child.wait
+      when "batch":
+        execution_batch(): x.relu.square + 1
       else: raise ValueError("unknown test operation")

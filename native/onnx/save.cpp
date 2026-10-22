@@ -7,7 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-using namespace sputniktorch;
+using namespace sputnik_torch;
 namespace {
 std::atomic<uint64_t> next_file{0};
 struct TemporaryFile {

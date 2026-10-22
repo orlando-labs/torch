@@ -1,12 +1,12 @@
-package sputniktorch.train_example
+package torch.train_example
 
-import sputniktorch
+import torch
 export main
 
 def main():
-  model = sputniktorch.Linear(1, 1, seed: 7, device: "mps")
-  optimizer = sputniktorch.SGD(model.parameters, lr: 0.05)
-  x = sputniktorch.tensor([[1.0], [2.0], [3.0]], device: "mps")
+  model = torch.Linear(1, 1, seed: 7, device: "mps")
+  optimizer = torch.SGD(model.parameters, lr: 0.05)
+  x = torch.tensor([[1.0], [2.0], [3.0]], device: "mps")
   target = x.mul(2).add(1)
   200.times:
     optimizer.zero_grad!

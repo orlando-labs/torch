@@ -1,9 +1,9 @@
-package sputniktorch.ffi_calls
+package torch.ffi_calls
 
-from sputniktorch.backends import execution_batch, synchronize
-from sputniktorch.autograd.context import execution_mode
-from sputniktorch.tensor.factories import ones
-from sputniktorch.tensor.value import Tensor
+from torch.backends import execution_batch, synchronize
+from torch.autograd.context import execution_mode
+from torch.tensor.factories import ones
+from torch.tensor.value import Tensor
 
 export main
 

@@ -1,8 +1,8 @@
-package sputniktorch.onnx_regression_test
+package torch.onnx_regression_test
 
-from sputniktorch.checks import run as check_tensors
-from sputniktorch.idioms_test import main as check_idioms
-from sputniktorch.training_test import run as check_training
+from torch.checks import run as check_tensors
+from torch.idioms_test import main as check_idioms
+from torch.training_test import run as check_training
 
 export run, main
 

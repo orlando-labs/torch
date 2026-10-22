@@ -1,7 +1,7 @@
-package sputniktorch.nn.nll_loss
+package torch.nn.nll_loss
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import nll_loss
+from torch.nn.module import Module
+from torch.nn.functional import nll_loss
 
 export NLLLoss
 

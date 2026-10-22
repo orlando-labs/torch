@@ -29,7 +29,7 @@ communication state. Эффекты каждого API перечисляют в
 `view.fill!` — общий storage. Это документированные domains мутации.
 Bang не означает исключительное владение памятью.
 
-| PyTorch/Ruby операция | Sputniktorch | Изменение |
+| PyTorch/Ruby операция | Torch | Изменение |
 | --- | --- | --- |
 | `add`, `add_` | `add`, `add!` | Новый результат / storage receiver-а |
 | `copy_`, `zero_`, `fill_` | `copy_from!`, `zero!`, `fill!` | Storage receiver-а |
@@ -329,7 +329,7 @@ gradient следует зафиксированной reference-семанти�
 с `step!` и независимым state. `StepLR`, `CosineAnnealingLR` и plateau
 scheduler покрываются fixtures с восстановлением exact step count.
 
-`sputniktorch.backends.execution_batch` исполняет Sputnik-блок на одном blocking
+`torch.backends.execution_batch` исполняет Sputnik-блок на одном blocking
 FFI worker в native backend. Вложенные tensor вызовы используют этот worker;
 VM исполняет тот же callback через свой ABI. Результат блока, task-local
 контекст и исключения сохраняются. Scope не меняет grad/inference/trace mode
@@ -364,7 +364,7 @@ Dataset decoding форматов изображений/аудио относи
 
 ## 10. Ошибки
 
-Публичная база `sputniktorch.Error < NativeError`; категории: `ShapeError`,
+Публичная база `torch.Error < NativeError`; категории: `ShapeError`,
 `DTypeError`, `DeviceError`, `DeviceUnavailableError`, `UnsupportedOperation`,
 `AutogradError`, `MutationRequiredError`, `ReadOnlyTensorError`,
 `CheckpointError`, `StateDictError`, `DistributedError`, `DistributedTimeout`,

@@ -1,9 +1,9 @@
-package sputniktorch.auto_registration_test
+package torch.auto_registration_test
 
-from sputniktorch.nn import Module, Linear, Sequential, ModuleList, ReLU, BatchNorm1d
-from sputniktorch.nn import MultiheadAttention, RNNCell, Dropout
-from sputniktorch.tensor.factories import ones
-from sputniktorch.checks import check
+from torch.nn import Module, Linear, Sequential, ModuleList, ReLU, BatchNorm1d
+from torch.nn import MultiheadAttention, RNNCell, Dropout
+from torch.tensor.factories import ones
+from torch.checks import check
 
 export main, run
 

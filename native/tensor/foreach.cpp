@@ -7,7 +7,7 @@
 #include <ATen/ops/_foreach_sqrt.h>
 #include <ATen/ops/_foreach_sub.h>
 
-using namespace sputniktorch;
+using namespace sputnik_torch;
 namespace {
 std::vector<at::Tensor> tensors(SputnikCtx *cx, SputnikValue list, bool mutating = false) {
   require(sputnik_is_list(cx, list), "TypeError", "expected tensor core list");
@@ -33,7 +33,7 @@ void operand(SputnikCtx *cx, SputnikValue value, size_t count, F &&apply) {
     apply(at::Scalar(number(cx, value)));
     return;
   }
-  require(sputnik_list_len(cx, value) == count, "Sputniktorch.Errors.ShapeError",
+  require(sputnik_list_len(cx, value) == count, "Torch.Errors.ShapeError",
           "tensor list operands must have equal lengths");
   if (count != 0 && sputnik_is_handle(cx, sputnik_list_at(cx, value, 0))) {
     apply(at::TensorList(tensors(cx, value)));
@@ -176,7 +176,7 @@ SputnikStatus amt_tensor_list_pack(SputnikCtx *cx, const SputnikValue *a, size_t
     for (auto &value : values) {
       require(value.layout() == at::kStrided && value.device() == values[0].device() &&
                   value.scalar_type() == values[0].scalar_type(),
-              "Sputniktorch.Errors.DTypeError", "pack requires matching dense tensors");
+              "Torch.Errors.DTypeError", "pack requires matching dense tensors");
     }
     for (auto &value : values) value = value.reshape({-1});
     *out = wrap(cx, at::cat(values));
@@ -187,18 +187,18 @@ SputnikStatus amt_tensor_list_unpack(SputnikCtx *cx, const SputnikValue *a, size
     argc_check(n, 3);
     ExecutionGuard mode(integer(cx, a[2]));
     auto &flat = core(cx, a[0]);
-    require(flat.tensor.dim() == 1, "Sputniktorch.Errors.ShapeError", "unpack requires a flat tensor");
+    require(flat.tensor.dim() == 1, "Torch.Errors.ShapeError", "unpack requires a flat tensor");
     auto templates = tensors(cx, a[1]);
     int64_t total = 0;
     for (const auto &value : templates) {
       require(value.scalar_type() == flat.tensor.scalar_type() &&
                   value.device() == flat.tensor.device(),
-              "Sputniktorch.Errors.DTypeError", "unpack requires matching templates");
+              "Torch.Errors.DTypeError", "unpack requires matching templates");
       require(value.numel() <= flat.tensor.numel() - total,
-              "Sputniktorch.Errors.ShapeError", "unpack template sizes exceed flat tensor");
+              "Torch.Errors.ShapeError", "unpack template sizes exceed flat tensor");
       total += value.numel();
     }
-    require(total == flat.tensor.numel(), "Sputniktorch.Errors.ShapeError", "unpack template sizes differ");
+    require(total == flat.tensor.numel(), "Torch.Errors.ShapeError", "unpack template sizes differ");
     std::vector<SputnikValue> result;
     result.reserve(templates.size());
     int64_t offset = 0;

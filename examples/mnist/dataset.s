@@ -1,7 +1,7 @@
-package sputniktorch.mnist.dataset
+package torch.mnist.dataset
 
-from sputniktorch.data import TensorDataset
-from sputniktorch.mnist.idx import read_idx
+from torch.data import TensorDataset
+from torch.mnist.idx import read_idx
 
 export MNIST
 

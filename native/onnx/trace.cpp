@@ -1,5 +1,7 @@
 #include "lowering.h"
+#ifndef ONNX_NAMESPACE
 #define ONNX_NAMESPACE onnx
+#endif
 #include <torch/csrc/jit/frontend/tracer.h>
 #include <torch/csrc/jit/serialization/export.h>
 #include <atomic>
@@ -7,7 +9,7 @@
 #include <mutex>
 #include <unordered_set>
 
-namespace sputniktorch {
+namespace sputnik_torch {
 namespace {
 using namespace onnx_export;
 struct Session {
@@ -30,7 +32,7 @@ struct CurrentTrace {
 std::atomic<int64_t> next_token{1};
 std::mutex sessions_mutex;
 std::unordered_map<int64_t, std::weak_ptr<Session>> sessions;
-constexpr char trace_tag[] = "sputniktorch.ONNXTraceCore";
+constexpr char trace_tag[] = "torch.ONNXTraceCore";
 
 std::shared_ptr<Session> find_session(int64_t token) {
   std::lock_guard lock(sessions_mutex);

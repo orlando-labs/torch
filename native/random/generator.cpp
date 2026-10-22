@@ -2,9 +2,9 @@
 #include <ATen/CPUGeneratorImpl.h>
 #include <mutex>
 
-using namespace sputniktorch;
+using namespace sputnik_torch;
 namespace {
-constexpr char tag[] = "sputniktorch.GeneratorCore";
+constexpr char tag[] = "torch.GeneratorCore";
 struct GeneratorCore {
   at::Generator generator;
 };
@@ -49,16 +49,14 @@ extern "C" SputnikStatus amt_generator(SputnikCtx *cx, const SputnikValue *a, si
       return;
     }
     const auto dims = integers(cx, a[2]);
-    require(dims.size() <= 64, "Sputniktorch.Errors.ShapeError", "random rank exceeds 64");
+    require(dims.size() <= 64, "Torch.Errors.ShapeError", "random rank exceeds 64");
     for (auto d : dims)
-      require(d >= 0, "Sputniktorch.Errors.ShapeError", "negative random dimension");
+      require(d >= 0, "Torch.Errors.ShapeError", "negative random dimension");
     const auto dtype = string(cx, a[3]);
-    require(dtype == "float32" || dtype == "float64", "Sputniktorch.Errors.DTypeError",
+    require(dtype == "float32" || dtype == "float64", "Torch.Errors.DTypeError",
             "Generator samples require float32 or float64");
-    const at::Device device(string(cx, a[4]));
-    require((device.is_cpu() || device.is_mps()) && (!device.has_index() || device.index() == 0),
-            "Sputniktorch.Errors.DeviceError", "Generator supports cpu and mps:0");
-    require(!(device.is_mps() && dtype == "float64"), "Sputniktorch.Errors.DTypeError",
+    const auto device = tensor_device(string(cx, a[4]));
+    require(!(device.is_mps() && dtype == "float64"), "Torch.Errors.DTypeError",
             "MPS cannot store float64");
     auto options =
         at::TensorOptions().dtype(dtype == "float64" ? at::kDouble : at::kFloat).device(at::kCPU);

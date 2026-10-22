@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   std::string directory;
   try {
     if (argc < 4 || std::string(argv[1]) != "--nproc") {
-      std::cerr << "usage: sputniktorch-run --nproc N [--timeout SECONDS] program [args...]\n";
+      std::cerr << "usage: torch-run --nproc N [--timeout SECONDS] program [args...]\n";
       return 2;
     }
     const int count = std::stoi(argv[2]);
@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     }
     if (count < 1 || count > 64 || timeout < 1 || timeout > 86400 || start >= argc)
       throw std::runtime_error("invalid worker count, timeout, or program");
-    char path[] = "/tmp/sputniktorch-run-XXXXXX";
+    char path[] = "/tmp/torch-run-XXXXXX";
     if (!mkdtemp(path))
       throw std::runtime_error("cannot create rendezvous directory");
     directory = path;
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
       std::error_code ec;
       std::filesystem::remove_all(directory, ec);
     }
-    std::cerr << "sputniktorch-run: " << e.what() << '\n';
+    std::cerr << "torch-run: " << e.what() << '\n';
     return interrupted ? 128 + interrupted : 1;
   }
 }

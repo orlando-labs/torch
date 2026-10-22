@@ -17,7 +17,7 @@ showcase и benchmark, поэтому изменения цикла пример
 
 ## Запуск
 
-MNIST готовится отдельно: `./tools/fetch-mnist`. Из корня sputniktorch:
+MNIST готовится отдельно: `./tools/fetch-mnist`. Из корня torch:
 
 ```sh
 # Python от того же Homebrew PyTorch, что и используемый LibTorch.
@@ -189,7 +189,7 @@ runner сохраняет численные результаты, отчёт и
 Для исследования изменения обвязки есть optional `compare_calls.py`: он
 добавляет сохранённые native и VM binaries к текущим VM/native/Python, проверяет
 full-native build stamp и saved build log, numeric metrics/checkpoint, hashes
-исходников, executables и MNIST. Нагрузка фиксирована: три epochs, batch=32,
+исходников, executables и MNIST. По умолчанию: три epochs, batch=32,
 train=2048/test=512, seed=7, четыре threads, run scope и packed Python optimizer.
 Сборку текущего benchmark через `run.py` выполняют перед A/B; snapshots binary
 и его build log сохраняют до изменения compiler/runtime.
@@ -201,10 +201,51 @@ train=2048/test=512, seed=7, четыре threads, run scope и packed Python op
   --output build/bench/mnist/call-overhead-ab
 ```
 
+Для VM-оптимизаций достаточно `--before-vm`; сохранённый native и его log
+передаются только вместе, если нужен также native A/B. Текущий full-native
+и Python остаются контрольными lanes. `--batch-size` меняет размер батча
+во всех lanes и в проверке численного совпадения:
+
+```sh
+"$PYTHON" bench/mnist/compare_calls.py --device mps --python "$PYTHON" \
+  --before-vm /path/to/saved/sputnik --batch-size 128 --processes 5 \
+  --output build/bench/mnist/vm-ab-128
+```
+
 Сохранённая VM читает текущий manifest и adapter; native snapshot содержит
 свой adapter. Compilation/cache warmup, samples и другие нагрузки должны
 закончиться до measured runs. Результаты этой оптимизации:
 [обвязка 2026-10-06](../../docs/native-call-overhead-profile.md).
+
+Новая VM-итерация с constructor hook cache и inline tagged Value, её
+атомарные A/B, полные CPU/MPS серии и оставшийся разрыв:
+[Value и dispatch VM 2026-10-06](../../docs/vm-value-dispatch-profile.md).
+
+Причины медленного `numel`, исправления native frame/metadata, приоритеты
+следующей архитектурной работы и свежие CPU/MPS MNIST A/B:
+[numel и native 2026-10-08](../../docs/native-numel-profile.md).
+Первый typed ABI для metadata calls и отдельный FFI A/B:
+[typed leaf 2026-10-08](../../docs/typed-leaf-abi-profile.md).
+`numel` используется в setup и метриках батчей; этот FFI результат не доказывает
+ускорения train/eval.
+TaskLocal и autograd carrier state, проверенные CPU/MPS FFI A/B:
+[execution mode 2026-10-08](../../docs/execution-mode-profile.md).
+
+Свежая диагностика проигрыша VM, проверенные и отвергнутые оптимизации,
+CPU/MPS A/B с batch=32/128 и разложение времени по этапам:
+[runtime investigation 2026-10-10](../../docs/mnist-runtime-stage4.md).
+
+Продолжение: динамический состав работы VM, отбракованные runtime/compiler
+эксперименты и проверка PGO для VM и built target:
+[runtime investigation 2026-10-11](../../docs/mnist-runtime-stage5.md).
+Вызовы, кадры, временные аргументы и повторные измерения после фоновой нагрузки:
+[runtime investigation 2026-10-12](../../docs/mnist-runtime-stage6.md).
+
+Проверка heap registry и передачи возвращаемых объектов, включая отдельные
+PGO control/candidate builds:
+[stage 7, 2026-10-12](../../docs/mnist-runtime-stage7.md).
+Воспроизводимая профильная сборка без Python:
+[`tools/profile-build`](../../../sputnik-lang/docs/engineering/profile-builds.md).
 
 Проверки optional runner:
 

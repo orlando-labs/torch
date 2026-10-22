@@ -1,9 +1,9 @@
-package sputniktorch.distributed.ddp
+package torch.distributed.ddp
 
-from sputniktorch.errors import Error
+from torch.errors import Error
 
 export DDP
-native def _parameters!(group, entries, operation) from "amt_ddp_parameters"
+native def _parameters!(group, entries, operation) from "amt_ddp_parameters" blocking
 
 # Explicit post-backward reduction; equal local batch sizes, CPU/Gloo only.
 class DDP:

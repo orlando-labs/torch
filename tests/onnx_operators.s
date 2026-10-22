@@ -1,26 +1,26 @@
-package sputniktorch.onnx_operators_test
+package torch.onnx_operators_test
 
-import sputniktorch
-from sputniktorch.nn import Sequential, Identity, Linear, ConvTranspose2d, GroupNorm, LayerNorm
-from sputniktorch.nn import GELU, SiLU, Mish, Softplus, Softshrink, Hardshrink, Hardswish
-from sputniktorch.nn import ConstantPad2d, ReflectionPad2d, ReplicationPad2d
-from sputniktorch.nn import AvgPool2d, MaxPool2d, AdaptiveAvgPool2d, AdaptiveMaxPool2d
-from sputniktorch.nn import MultiheadAttention, GRU, LSTM, PReLU, Threshold
-from sputniktorch.onnx import export_model, ONNXError
-from sputniktorch.autograd import inference_mode, inference_enabled?, grad_enabled?
-from sputniktorch.onnx_operator_model import OperatorModel
-from sputniktorch.onnx_error_model import ErrorModel
-from sputniktorch.onnx_tied_model import TiedModel
-from sputniktorch.checks import check
+import torch
+from torch.nn import Sequential, Identity, Linear, ConvTranspose2d, GroupNorm, LayerNorm
+from torch.nn import GELU, SiLU, Mish, Softplus, Softshrink, Hardshrink, Hardswish
+from torch.nn import ConstantPad2d, ReflectionPad2d, ReplicationPad2d
+from torch.nn import AvgPool2d, MaxPool2d, AdaptiveAvgPool2d, AdaptiveMaxPool2d
+from torch.nn import MultiheadAttention, GRU, LSTM, PReLU, Threshold
+from torch.onnx import export_model, ONNXError
+from torch.autograd import inference_mode, inference_enabled?, grad_enabled?
+from torch.onnx_operator_model import OperatorModel
+from torch.onnx_error_model import ErrorModel
+from torch.onnx_tied_model import TiedModel
+from torch.checks import check
 
 export run, main
 
 def _outputs(result):
-  return [result] if sputniktorch.Tensor === result
+  return [result] if torch.Tensor === result
   result.reduce([]) |items, entry|: items + _outputs(entry)
 
 def _input(shape, batch, device, dtype):
-  sample = sputniktorch.randn([batch, *shape], seed: batch + 11, device:)
+  sample = torch.randn([batch, *shape], seed: batch + 11, device:)
   if dtype == "float32" then sample else sample.to(device:, dtype:)
 
 def _verify(name, model, shape, device, dtype: "float32", kwargs: {}, opset_version: 18,
@@ -49,10 +49,10 @@ def _verify(name, model, shape, device, dtype: "float32", kwargs: {}, opset_vers
       references["#{key}.#{batch}"] = value
     _outputs(model(input, **kwargs)).each_with_index |output, index|:
       references["#{output_names[index]}.#{batch}"] = output
-  sputniktorch.save(references, prefix + ".pt")
+  torch.save(references, prefix + ".pt")
 
 def _errors(device):
-  sample = sputniktorch.randn([2, 4, 3, 3], seed: 0, device:)
+  sample = torch.randn([2, 4, 3, 3], seed: 0, device:)
   before = sample.to_a
   path = "build/onnx-#{device}-preserved.onnx"
   identity = Identity()
@@ -94,7 +94,7 @@ def _errors(device):
   check(refused and training.training?, "export requires explicit eval mode")
   tied = TiedModel(device)
   tied.eval!
-  encoded = export_model(tied, sputniktorch.ones([2, 3], device:))
+  encoded = export_model(tied, torch.ones([2, 3], device:))
   check(encoded.initializer_count == 1, "tied parameters share an ONNX initializer")
   [[sample, sample], tied.weight].each |inputs|:
     refused = false
@@ -110,7 +110,8 @@ def run(device):
   _verify("layout", OperatorModel(:layout), [3, 4], device, opset_version: 20)
   _verify("types", OperatorModel(:types), [3], device, dtype: "int64")
   _verify("task", OperatorModel(:task), [3], device, opset_version: 19)
-  mask = sputniktorch.tensor([[true, true, false], [false, false, false], [true, true, true]], device:)
+  _verify("batch", OperatorModel(:batch), [3], device, opset_version: 19)
+  mask = torch.tensor([[true, true, false], [false, false, false], [true, true, true]], device:)
   _verify("attention", OperatorModel(:attention), [3, 4], device, kwargs: {mask:})
   _verify("causal", OperatorModel(:causal), [3, 4], device, kwargs: {mask:})
   normal = Sequential([GroupNorm(2, 4, device:), GELU(), SiLU(), Mish(), LayerNorm([6, 6], device:)])

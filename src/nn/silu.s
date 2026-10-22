@@ -1,7 +1,7 @@
-package sputniktorch.nn.silu
+package torch.nn.silu
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import silu
+from torch.nn.module import Module
+from torch.nn.functional import silu
 
 export SiLU
 

@@ -1,6 +1,6 @@
-package sputniktorch.onnx_mps_test
+package torch.onnx_mps_test
 
-from sputniktorch.onnx_operators_test import run
+from torch.onnx_operators_test import run
 
 export main
 

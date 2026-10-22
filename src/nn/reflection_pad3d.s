@@ -1,7 +1,7 @@
-package sputniktorch.nn.reflection_pad3d
+package torch.nn.reflection_pad3d
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import kernel, spatial
+from torch.nn.module import Module
+from torch.nn.functional import kernel, spatial
 
 export ReflectionPad3d
 

@@ -1,6 +1,6 @@
 # MNIST showcase
 
-Модули `examples/mnist/*.s` объявляют имена `sputniktorch.mnist.*` через
+Модули `examples/mnist/*.s` объявляют имена `torch.mnist.*` через
 `package`. Bootstrap читает эти декларации и регистрирует пары name/path
 в build manifest; каталог `examples` не добавляется в import search paths.
 Поэтому пример использует абсолютные module imports, хотя файлы находятся
@@ -17,7 +17,7 @@ Test split участвует только в оценке; gradients и BatchNo
 ```sh
 ./tools/fetch-mnist
 ./tools/build examples/showcase.s
-PYTORCH_ENABLE_MPS_FALLBACK=0 ./build/sputnik/sputniktorch.showcase
+PYTORCH_ENABLE_MPS_FALLBACK=0 ./build/sputnik/torch.showcase
 ```
 
 Датасет загружается отдельно от сборки и исполнения, с [зеркала MNIST,
@@ -62,7 +62,7 @@ buffers, создаёт новый model, загружает веса через
 явно и предназначены для коротких проверок, например:
 
 ```sh
-./build/sputnik/sputniktorch.showcase --device cpu --epochs 1 \
+./build/sputnik/torch.showcase --device cpu --epochs 1 \
   --train-limit 128 --test-limit 64 --batch-size 32 \
   --checkpoint build/mnist-smoke.pt
 ```

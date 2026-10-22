@@ -16,43 +16,56 @@ import time
 from run import ROOT, native_inputs, parse_sample, sha256, source_hashes, validate_samples
 
 
-def main():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--before-native", type=Path, required=True)
-    parser.add_argument("--before-build-log", type=Path, required=True)
+    parser.add_argument("--before-native", type=Path)
+    parser.add_argument("--before-build-log", type=Path)
     parser.add_argument("--before-vm", type=Path)
     parser.add_argument("--device", choices=("cpu", "mps"), required=True)
     parser.add_argument("--python", required=True)
     parser.add_argument("--processes", type=int, default=5)
+    parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--output", type=Path, required=True)
-    args = parser.parse_args()
-    if args.processes <= 0:
-        parser.error("processes must be positive")
-    args.epochs, args.batch_size, args.seed, args.threads = 3, 32, 7, 4
+    args = parser.parse_args(argv)
+    if min(args.processes, args.batch_size) <= 0:
+        parser.error("processes and batch size must be positive")
+    if bool(args.before_native) != bool(args.before_build_log):
+        parser.error("--before-native and --before-build-log must be provided together")
+    if not args.before_native and not args.before_vm:
+        parser.error("provide --before-vm or --before-native for an A/B comparison")
+    args.epochs, args.seed, args.threads = 3, 7, 4
     args.train_limit, args.test_limit = 2048, 512
     args.profile, args.execution_scope = False, "run"
     args.loss_atol, args.accuracy_atol = 1e-5, 0.0
+    return args
+
+
+def main():
+    args = parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     sputnik = ROOT.parent / "sputnik-lang/build/sputnik"
-    native = ROOT / "build/sputnik/sputniktorch.mnist_benchmark"
-    manifest = ROOT / "build/sputniktorch.mnist_benchmark.build.json"
+    native = ROOT / "build/sputnik/torch.mnist_benchmark"
+    manifest = ROOT / "build/torch.mnist_benchmark.build.json"
     sources = source_hashes()
     stamp = json.loads((ROOT / "build/mnist-benchmark-build.json").read_text())
     if (not stamp["full_native"] or native_inputs(stamp["sources"]) != native_inputs(sources)
             or stamp["sputnik_sha256"] != sha256(sputnik)
             or stamp["native_sha256"] != sha256(native)):
         raise ValueError("Current native benchmark is stale")
-    text = args.before_build_log.read_text()
-    before, _ = json.JSONDecoder().raw_decode(text[text.index("{"):])
-    if (not before["native_graph_full_coverage"] or before["native_bytecode_fallback"]
-            or before["native_hash"] != sha256(args.before_native)):
-        raise ValueError("Saved native binary/coverage does not match its build log")
-    commands = {"native-before": [str(args.before_native.resolve())],
-                "sputnik-built": [str(native)],
+    before = None
+    commands = {}
+    if args.before_native:
+        text = args.before_build_log.read_text()
+        before, _ = json.JSONDecoder().raw_decode(text[text.index("{"):])
+        if (not before["native_graph_full_coverage"] or before["native_bytecode_fallback"]
+                or before["native_hash"] != sha256(args.before_native)):
+            raise ValueError("Saved native binary/coverage does not match its build log")
+        commands["native-before"] = [str(args.before_native.resolve())]
+    commands.update({"sputnik-built": [str(native)],
                 "sputnik-vm": [str(sputnik), "run", str(manifest), "--grant", "ffi",
                              "--grant", "fs.read", "--"],
-                "python": [args.python, str(ROOT / "bench/mnist/python_mnist.py")]}
+                "python": [args.python, str(ROOT / "bench/mnist/python_mnist.py")]})
     if args.before_vm:
         commands["vm-before"] = [str(args.before_vm.resolve()), "run", str(manifest),
                                  "--grant", "ffi", "--grant", "fs.read", "--"]
@@ -79,7 +92,7 @@ def main():
                     dataset_sha256=dataset_hashes,
                     libtorch_library_sha256={name: sha256(Path(lock["torch_prefix"]) / "lib" / name)
                         for name in ("libtorch.dylib", "libtorch_cpu.dylib", "libc10.dylib")}, samples=[])
-    common = ["--device", args.device, "--epochs", "3", "--batch-size", "32",
+    common = ["--device", args.device, "--epochs", "3", "--batch-size", str(args.batch_size),
               "--seed", "7", "--train-limit", "2048", "--test-limit", "512",
               "--data", str(data)]
     for process in range(-1, args.processes):
@@ -117,7 +130,11 @@ def main():
     envelope.update(summary_loop_seconds=summary, paired_loop_seconds=pairs)
     (output / "results.json").write_text(json.dumps(envelope, indent=2, allow_nan=False) + "\n")
     print(json.dumps(summary, indent=2), flush=True)
-    print("native before/after ratios", [p["sputnik-built"] / p["native-before"] for p in pairs])
+    if "native-before" in commands:
+        print("native before/after ratios", [p["sputnik-built"] / p["native-before"] for p in pairs])
+    if "vm-before" in commands:
+        print("VM before/after ratios", [p["sputnik-vm"] / p["vm-before"] for p in pairs])
+    print("VM/Python ratios", [p["sputnik-vm"] / p["python"] for p in pairs])
     print("native/Python ratios", [p["sputnik-built"] / p["python"] for p in pairs])
 
 

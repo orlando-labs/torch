@@ -1,8 +1,8 @@
-package sputniktorch.nn.bilinear
+package torch.nn.bilinear
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import kernel
-from sputniktorch.tensor.factories import randn, zeros
+from torch.nn.module import Module
+from torch.nn.functional import kernel
+from torch.tensor.factories import randn, zeros
 
 export Bilinear
 

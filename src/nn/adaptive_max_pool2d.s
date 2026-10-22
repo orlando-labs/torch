@@ -1,14 +1,13 @@
-package sputniktorch.nn.adaptive_max_pool2d
+package torch.nn.adaptive_max_pool2d
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import kernel, spatial
+from torch.nn.module import Module
+from torch.nn.pooling_functional import adaptive_max_pool2d
 
 export AdaptiveMaxPool2d
 
 class AdaptiveMaxPool2d < Module:
-  def init(output_size):
+  def init(@output_size, @return_indices: false):
     _initialize_registry!
-    @options = [spatial(output_size, 2)]
 
-  def forward(x): kernel("adaptive_max_pool2d", [x], @options)
+  def forward(x): adaptive_max_pool2d(x, @output_size, return_indices: @return_indices)
 

@@ -1,7 +1,7 @@
-package sputniktorch.nn.hardsigmoid
+package torch.nn.hardsigmoid
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import hardsigmoid
+from torch.nn.module import Module
+from torch.nn.functional import hardsigmoid
 
 export Hardsigmoid
 

@@ -1,6 +1,6 @@
-package sputniktorch.data.concat_dataset
+package torch.data.concat_dataset
 
-from sputniktorch.data.dataset import Dataset
+from torch.data.dataset import Dataset
 
 export ConcatDataset
 

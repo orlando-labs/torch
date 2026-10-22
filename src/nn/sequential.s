@@ -1,6 +1,6 @@
-package sputniktorch.nn.sequential
+package torch.nn.sequential
 
-from sputniktorch.nn.module import Module
+from torch.nn.module import Module
 
 export Sequential
 

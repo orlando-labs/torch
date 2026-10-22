@@ -1,9 +1,9 @@
-package sputniktorch.optim.adam
+package torch.optim.adam
 
-from sputniktorch.optim.optimizer import Optimizer, validate_coefficients
-from sputniktorch.tensor.factories import zeros_like
-from sputniktorch.tensor.value import Tensor
-from sputniktorch.tensor.foreach import binary, unary, mutate!, gradients, packable?, independent?, pack, unpack
+from torch.optim.optimizer import Optimizer, validate_coefficients
+from torch.tensor.factories import zeros_like
+from torch.tensor.value import Tensor
+from torch.tensor.foreach import binary, unary, mutate!, gradients, packable?, independent?, pack, unpack
 
 export Adam
 

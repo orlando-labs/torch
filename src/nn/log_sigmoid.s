@@ -1,7 +1,7 @@
-package sputniktorch.nn.log_sigmoid
+package torch.nn.log_sigmoid
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import log_sigmoid
+from torch.nn.module import Module
+from torch.nn.functional import log_sigmoid
 
 export LogSigmoid
 

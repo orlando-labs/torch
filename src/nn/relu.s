@@ -1,6 +1,6 @@
-package sputniktorch.nn.relu
+package torch.nn.relu
 
-from sputniktorch.nn.module import Module
+from torch.nn.module import Module
 
 export ReLU
 

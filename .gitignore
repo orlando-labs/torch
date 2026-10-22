@@ -1,3 +1,9 @@
 build/
 .sputnik/
 *.dSYM/
+
+out/
+__pycache__/
+*.sputnikpkg
+*.publish-*.json
+.DS_Store

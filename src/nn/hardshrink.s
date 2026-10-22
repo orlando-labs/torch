@@ -1,7 +1,7 @@
-package sputniktorch.nn.hardshrink
+package torch.nn.hardshrink
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import hardshrink
+from torch.nn.module import Module
+from torch.nn.functional import hardshrink
 
 export Hardshrink
 

@@ -1,7 +1,7 @@
-package sputniktorch.nn.softmax
+package torch.nn.softmax
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import softmax
+from torch.nn.module import Module
+from torch.nn.functional import softmax
 
 export Softmax
 

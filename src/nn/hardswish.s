@@ -1,7 +1,7 @@
-package sputniktorch.nn.hardswish
+package torch.nn.hardswish
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import hardswish
+from torch.nn.module import Module
+from torch.nn.functional import hardswish
 
 export Hardswish
 

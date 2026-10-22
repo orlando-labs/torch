@@ -1,6 +1,6 @@
-package sputniktorch.checks
+package torch.checks
 
-import sputniktorch
+import torch
 export run, check
 
 def check(condition, message):
@@ -8,8 +8,23 @@ def check(condition, message):
     raise ValueError(message)
 
 def run(device):
-  x = sputniktorch.tensor([[1.0, 2.0], [3.0, 4.0]], device:, requires_grad: true)
+  x = torch.tensor([[1.0, 2.0], [3.0, 4.0]], device:, requires_grad: true)
   check(x.shape == [2, 2], "shape")
+  check(x.numel == 4 and x._core.numel == 4, "typed numel through both Tensor layers")
+  direct_relu = torch.Tensor(x._core.relu(0))
+  check(direct_relu.to_a == x.to_a and direct_relu.requires_grad?, "typed relu preserves values and autograd")
+  refused_mode = false
+  try:
+    x._core.relu(3)
+  rescue ArgumentError:
+    refused_mode = true
+  check(refused_mode and x.relu.requires_grad?, "typed relu fault restores execution mode")
+  refused_mode_type = false
+  try:
+    x._core.relu(true)
+  rescue TypeError:
+    refused_mode_type = true
+  check(refused_mode_type, "typed relu rejects non-Int mode")
   check(x.device.type == device, "actual device")
   loss = x.square.sum()
   loss.backward!()
@@ -18,40 +33,52 @@ def run(device):
   x.zero_grad!
   check(x.grad == null, "zero_grad set_to_none")
 
-  released = sputniktorch.tensor([1.0], device:)._core
+  released = torch.tensor([1.0], device:)._core
   check(released.destroy!, "bare collected handle teardown")
   check(not released.destroy!, "collected handle teardown is idempotent")
   closed = false
   try:
-    sputniktorch.Tensor(released).shape
+    torch.Tensor(released).shape
   rescue LifetimeError |error|:
     closed = true
   check(closed, "collected handle access after teardown")
+  closed = false
+  try:
+    torch.Tensor(released).numel
+  rescue LifetimeError:
+    closed = true
+  check(closed, "typed numel rejects collected handle after teardown")
+  closed = false
+  try:
+    released.relu(0)
+  rescue LifetimeError:
+    closed = true
+  check(closed, "typed relu rejects collected handle after teardown")
 
   octets = "ABC".bytes
-  imported = sputniktorch.from_bytes(octets, offset: 1, shape: [1, 2], device:)
+  imported = torch.from_bytes(octets, offset: 1, shape: [1, 2], device:)
   check(imported.to_a == [[66, 67]] and imported.dtype.to_str == "uint8", "Bytes tensor import")
   imported.fill!(0)
   check(octets.hex == "414243", "Bytes import owns its storage")
-  check(sputniktorch.from_bytes("".bytes, device:).numel == 0, "empty Bytes tensor")
+  check(torch.from_bytes("".bytes, device:).numel == 0, "empty Bytes tensor")
   refused = false
   try:
-    sputniktorch.from_bytes(octets, shape: [2], device:)
-  rescue Sputniktorch.Errors.ShapeError |error|:
+    torch.from_bytes(octets, shape: [2], device:)
+  rescue Torch.Errors.ShapeError |error|:
     refused = true
   check(refused, "byte payload and shape must agree")
 
-  values = sputniktorch.tensor([[1.0, 3.0], [4.0, 4.0], [5.0, 2.0]], device:, requires_grad: true)
+  values = torch.tensor([[1.0, 3.0], [4.0, 4.0], [5.0, 2.0]], device:, requires_grad: true)
   check(values.argmax(dim: 1).to_a == [1, 0, 0], "argmax tie selects first position")
   check(values.argmax(dim: -1, keepdim: true).shape == [3, 1], "argmax keepdim")
   check(values.argmax().item == 4, "global argmax")
-  indices = sputniktorch.tensor([2, 0, 2], dtype: "int64", device:)
+  indices = torch.tensor([2, 0, 2], dtype: "int64", device:)
   selected = values.index_select(0, indices)
   check(selected.to_a == [[5.0, 2.0], [1.0, 3.0], [5.0, 2.0]], "index_select order and duplicates")
   selected.sum().backward!()
   check(values.grad.to_a == [[1.0, 1.0], [0.0, 0.0], [2.0, 2.0]], "index_select autograd accumulation")
 
-  base = sputniktorch.tensor([[1.0, 2.0], [3.0, 4.0]], device:)
+  base = torch.tensor([[1.0, 2.0], [3.0, 4.0]], device:)
   independent = base.copy
   snapshot = base.snapshot
   base.select(0, 0).fill!(9)
@@ -61,50 +88,55 @@ def run(device):
   deep.zero!
   check(independent.sum().item == 10.0, "generic deep_copy honors native storage hook")
   check(snapshot.to_a == [[1.0, 2.0], [3.0, 4.0]], "snapshot stable")
+  snapshot_relu = snapshot.relu
+  snapshot_relu.fill!(0)
+  check(snapshot.to_a == [[1.0, 2.0], [3.0, 4.0]], "relu result is independent and writable")
   denied = false
   try:
     snapshot.detach.select(0, 0).fill!(0)
-  rescue Sputniktorch.Errors.ReadOnlyTensorError |e|:
+  rescue Torch.Errors.ReadOnlyTensorError |e|:
     denied = true
   check(denied, "snapshot alias must be read-only")
   ragged = false
   try:
-    sputniktorch.tensor([[1], [2, 3]])
-  rescue Sputniktorch.Errors.ShapeError |e|:
+    torch.tensor([[1], [2, 3]])
+  rescue Torch.Errors.ShapeError |e|:
     ragged = true
   check(ragged, "ragged input")
   overflow = false
   try:
-    sputniktorch.tensor([256], dtype: "uint8")
-  rescue Sputniktorch.Errors.DTypeError |e|:
+    torch.tensor([256], dtype: "uint8")
+  rescue Torch.Errors.DTypeError |e|:
     overflow = true
   check(overflow, "checked dtype conversion")
-  check(sputniktorch.tensor(3.0, device:).shape == [], "scalar rank zero")
-  check(sputniktorch.zeros([2, 0, 3], device:).to_a == [[], []], "empty shape")
-  check(sputniktorch.tensor([2], device:).mul(0.5).item == 1.0, "scalar promotion")
-  r1 = sputniktorch.randn([2, 3], seed: 42, device:)
-  r2 = sputniktorch.randn([2, 3], seed: 42, device:)
+  scalar = torch.tensor(3.0, device:)
+  check(scalar.shape == [] and scalar.numel == 1, "scalar rank zero and numel")
+  check(base.transpose(0, 1).numel == 4, "typed numel of noncontiguous tensor")
+  check(torch.zeros([2, 0, 3], device:).to_a == [[], []], "empty shape")
+  check(torch.tensor([2], device:).mul(0.5).item == 1.0, "scalar promotion")
+  r1 = torch.randn([2, 3], seed: 42, device:)
+  r2 = torch.randn([2, 3], seed: 42, device:)
   check(r1.to_a == r2.to_a, "local seeded RNG")
 
-  w = sputniktorch.zeros([1], device:, requires_grad: true)
-  optim = sputniktorch.SGD([w, w], lr: 0.05)
+  w = torch.zeros([1], device:, requires_grad: true)
+  optim = torch.SGD([w, w], lr: 0.05)
   60.times:
     optim.zero_grad!
     w.mul(2).sub(6).square.mean().backward!()
     optim.step!
   check((w.item - 3.0).abs < 0.0001, "train + duplicate parameter deduplication")
 
-  model = sputniktorch.Linear(1, 1, seed: 7, device:)
-  optimizer = sputniktorch.SGD(model.parameters, lr: 0.05)
-  input = sputniktorch.tensor([[1.0], [2.0], [3.0]], device:)
+  model = torch.Linear(1, 1, seed: 7, device:)
+  optimizer = torch.SGD(model.parameters, lr: 0.05)
+  input = torch.tensor([[1.0], [2.0], [3.0]], device:)
   target = input.mul(2).add(1)
   saved = model.state_dict
   invalid = saved.copy
-  invalid["bias"] = sputniktorch.zeros([2], device:)
+  invalid["bias"] = torch.zeros([2], device:)
   mismatch = false
   try:
     model.load_state_dict!(invalid)
-  rescue Sputniktorch.Errors.ShapeError |e|:
+  rescue Torch.Errors.ShapeError |e|:
     mismatch = true
   check(mismatch, "state dict strict preflight")
   check(model.state_dict["weight"].to_a == saved["weight"].to_a, "failed load preserves model")
@@ -125,10 +157,10 @@ def run(device):
   if device == "mps":
     rejected = false
     try:
-      sputniktorch.zeros([1], dtype: "float64", device: "mps")
-    rescue Sputniktorch.Errors.DTypeError |e|:
+      torch.zeros([1], dtype: "float64", device: "mps")
+    rescue Torch.Errors.DTypeError |e|:
       rejected = true
     check(rejected, "MPS float64 rejection")
-    sputniktorch.synchronize()
-  print("PASS sputniktorch " + device)
+    torch.synchronize()
+  print("PASS torch " + device)
   0

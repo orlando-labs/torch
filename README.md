@@ -1,4 +1,4 @@
-# sputniktorch
+# torch
 
 PyTorch-подобный пакет для Sputnik поверх C++ LibTorch: Tensor, autograd,
 CNN/Transformer/RNN, оптимизаторы, загрузка данных, state dict, ONNX export и CPU/Gloo DDP.
@@ -8,15 +8,17 @@ CNN/Transformer/RNN, оптимизаторы, загрузка данных, st
 реализация, а не завершённая матрица будущего `0.1`.
 [Точный состав и ограничения](docs/implementation-status.md).
 [Каталог модулей и границы совместимости](docs/module-coverage.md).
+[Обновление пакета в ноутбуках без ручной правки зависимостей](docs/notebook-packages.md).
 [Автоматическая регистрация полей-модулей после `init`](docs/automatic-module-registration.md).
 [Стиль Sputnik и контракт мутаций](docs/sputnik-style.md).
 [DataLoader: нативные треды, ссылки и bounded prefetch](docs/data-loader.md).
 [Отчёт о проверенной сборке CPU/MPS/Gloo](docs/build-report.md).
+[Сборка source/bytecode/mixed пакетов с native source или prebuilt](docs/package-building.md).
 [ONNX API, поддержанные операции и ограничения трассировки](docs/onnx.md).
 
 Пакет, его сборка, launcher и тесты **не используют Python**. Требуются
 Sputnik, C++20, CMake, Ninja и готовый LibTorch. Homebrew-формула `pytorch`
-сама устанавливает дополнительные компоненты, включая Python; sputniktorch
+сама устанавливает дополнительные компоненты, включая Python; torch
 не вызывает их и не линкуется с `torch_python`/`libpython`.
 
 ## Сборка на Mac
@@ -30,14 +32,14 @@ Sputnik, C++20, CMake, Ninja и готовый LibTorch. Homebrew-формула
 brew install pytorch cmake ninja
 cd ../sputnik-lang
 make build/sputnik -j3
-cd ../sputniktorch
+cd ../torch
 ./tools/build tests/cpu.s --fetch-deps --probes
-./build/sputnik/sputniktorch.cpu_test
+./build/sputnik/torch.cpu_test
 ./tools/build examples/train.s
-./build/sputnik/sputniktorch.train_example
+./build/sputnik/torch.train_example
 ./tools/build examples/showcase.s
 ./tools/fetch-mnist
-./build/sputnik/sputniktorch.showcase
+./build/sputnik/torch.showcase
 ```
 
 `--fetch-deps` загружает только Gloo headers из зафиксированного submodule
@@ -55,6 +57,12 @@ Bootstrap также принимает LibTorch `2.14.1`: его Gloo pin со�
 в `build/`. Пока executable зависит от исходного установленного prefix;
 автономный relocatable bundle ещё не реализован.
 
+Корневого `sputnik.build.yaml` здесь нет: `tools/build` генерирует manifest
+выбранного entry, например `build/torch.cpu_test.build.json` для
+`tests/cpu.s`. Native объявления указывают `blocking` прямо после `from "..."`;
+отдельного списка `blocking_symbols` в генераторе больше нет. Вычислительные
+kernels вызываются inline; ожидания и I/O отмечены отдельно.
+
 ```sh
 ./tools/test         # CPU, VM/native, serialization, Gloo/DDP, launcher failures
 ./tools/test --mps   # дополнительно реальное обучение на MPS
@@ -67,9 +75,9 @@ Metal может оказаться недоступен: MPS проверяет
 ## API
 
 ```sputnik
-from sputniktorch import tensor, no_grad
-from sputniktorch.nn import Linear, MSELoss
-from sputniktorch.optim import AdamW
+from torch import tensor, no_grad
+from torch.nn import Linear, MSELoss
+from torch.optim import AdamW
 
 x = tensor([[1.0], [2.0], [3.0]], device: "mps")
 model = Linear(1, 1, seed: 7, device: "mps")
@@ -107,7 +115,7 @@ residual CNN (19 706 параметров), печатает test accuracy и с
 процессов и pickle. Порядок sampler сохраняется; выход из `each` отменяет
 и join-ит workers. `num_workers: 0` оставляет синхронную загрузку.
 
-`from sputniktorch.onnx import export_model` экспортирует eval-модель без Python.
+`from torch.onnx import export_model` экспортирует eval-модель без Python.
 Результат `Program` содержит ONNX bytes и `save(path)`. Пример с обученным
 checkpoint: [export_mnist.s](examples/export_mnist.s). Независимый C++
 ONNX Runtime нужен только для optional `tools/test-onnx`, не для пакета.
@@ -115,7 +123,7 @@ ONNX Runtime нужен только для optional `tools/test-onnx`, не д�
 ## Структура
 
 ```text
-src/sputniktorch.s                  # только публичные реэкспорты
+src/torch.s                  # только публичные реэкспорты
 src/device.s, dtype.s, backends.s
 src/autograd/{context,functional}.s
 src/errors.s                     # иерархия native faults

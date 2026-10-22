@@ -1,7 +1,7 @@
-package sputniktorch.nn.log_softmax
+package torch.nn.log_softmax
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import log_softmax
+from torch.nn.module import Module
+from torch.nn.functional import log_softmax
 
 export LogSoftmax
 

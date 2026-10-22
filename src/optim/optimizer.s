@@ -1,10 +1,10 @@
-package sputniktorch.optim.optimizer
+package torch.optim.optimizer
 
-from sputniktorch.errors import Error
-from sputniktorch.tensor.value import Tensor
-from sputniktorch.autograd import no_grad
-from sputniktorch.backends import execution_batch
-from sputniktorch.tensor.foreach import zero_grad! as _zero_grad!
+from torch.errors import Error
+from torch.tensor.value import Tensor
+from torch.autograd import no_grad
+from torch.backends import execution_batch
+from torch.tensor.foreach import zero_grad! as _zero_grad!
 
 export Optimizer, validate_coefficients
 

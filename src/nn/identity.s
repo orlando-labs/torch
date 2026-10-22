@@ -1,6 +1,6 @@
-package sputniktorch.nn.identity
+package torch.nn.identity
 
-from sputniktorch.nn.module import Module
+from torch.nn.module import Module
 
 export Identity
 

@@ -1,4 +1,4 @@
-package sputniktorch.mnist.export_options
+package torch.mnist.export_options
 
 export ExportOptions
 
@@ -9,7 +9,7 @@ class ExportOptions:
   attr references
 
   def init():
-    parser = ArgParser(name: "sputniktorch ONNX", about: "Export a trained MNIST SmallResNet")
+    parser = ArgParser(name: "torch ONNX", about: "Export a trained MNIST SmallResNet")
     parser.arg("--checkpoint", default: "build/mnist-resnet.pt")
     parser.arg("--device", choices: ["cpu", "mps"], default: "cpu")
     parser.arg("--output", default: "build/mnist-trained.onnx")

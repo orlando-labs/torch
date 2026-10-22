@@ -1,5 +1,5 @@
-package sputniktorch.random
+package torch.random
 
-from sputniktorch.random.generator import Generator
+from torch.random.generator import Generator
 
 export Generator

@@ -1,7 +1,7 @@
-package sputniktorch.nn.hardtanh
+package torch.nn.hardtanh
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import hardtanh
+from torch.nn.module import Module
+from torch.nn.functional import hardtanh
 
 export Hardtanh
 

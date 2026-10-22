@@ -1,12 +1,12 @@
-package sputniktorch.mnist_hotspot
+package torch.mnist_hotspot
 
-import sputniktorch
-from sputniktorch.backends import execution_batch
-from sputniktorch.data import DataLoader
-from sputniktorch.random.generator import Generator
-from sputniktorch.mnist.dataset import MNIST
-from sputniktorch.mnist.network import SmallResNet
-from sputniktorch.mnist.batch_profile import elapsed, synchronize
+import torch
+from torch.backends import execution_batch
+from torch.data import DataLoader
+from torch.random.generator import Generator
+from torch.mnist.dataset import MNIST
+from torch.mnist.network import SmallResNet
+from torch.mnist.batch_profile import elapsed, synchronize
 
 export main
 
@@ -53,8 +53,8 @@ def main():
     else:
       model = SmallResNet(device:)
       model.eval!
-      x = sputniktorch.ones([32, 1, 28, 28], device:)
-      sputniktorch.no_grad:
+      x = torch.ones([32, 1, 28, 28], device:)
+      torch.no_grad:
         value = null
         if options["case"] == "stateful":
           10.times: model.stateful?

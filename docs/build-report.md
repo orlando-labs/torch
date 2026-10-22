@@ -24,10 +24,10 @@ Homebrew не поставляет Gloo headers, необходимые для c
 Gloo из `libtorch_cpu`; отдельная библиотека Gloo не строится.
 
 Homebrew хранит C++ libraries внутри своего `site-packages/torch/lib`.
-Это layout установки: sputniktorch использует только headers и `torch`,
+Это layout установки: torch использует только headers и `torch`,
 `torch_cpu`, `c10`. В package source, bootstrap, launcher и tests нет
 вызовов Python, pip или torchgen. Formula Homebrew имеет собственные
-зависимости, включая Python, которые не требуются для запуска sputniktorch.
+зависимости, включая Python, которые не требуются для запуска torch.
 
 ## Результаты
 
@@ -47,7 +47,7 @@ Homebrew хранит C++ libraries внутри своего `site-packages/tor
 | Native serialization | Round-trip, default CPU для CUDA tags, Map `map_location`, shared strided storage views |
 | Native MPS checkpoint | CUDA-tagged fixture загружен на MPS; shared-storage alias сохранён |
 | Restricted parser | OrderedDict `_metadata`, protocol 4 FRAME; bad bounds, forbidden GLOBAL, truncation, unsupported protocol и duplicate keys отвергнуты |
-| Совместимость writer | C++ LibTorch `torch::pickle_load` прочитал собственный sputniktorch output |
+| Совместимость writer | C++ LibTorch `torch::pickle_load` прочитал собственный torch output |
 | Native Gloo/DDP, 2 ranks | SUM, broadcast, barrier; gradients совпали с concatenated-batch reference; SGD training |
 | Native и VM DDP errors | Schema mismatch обнаружен на обоих ranks; повторный close безопасен; доступ после close даёт LifetimeError |
 | Launcher | Worker failure передан вызывающему процессу; внешний timeout завершает workers |
@@ -87,7 +87,7 @@ loopback sockets и GPU. Недоступность Metal внутри sandbox �
 ./tools/fetch-mnist
 ./tools/test --mps
 ./tools/build examples/showcase.s
-PYTORCH_ENABLE_MPS_FALLBACK=0 PATH=/nonexistent ./build/sputnik/sputniktorch.showcase
+PYTORCH_ENABLE_MPS_FALLBACK=0 PATH=/nonexistent ./build/sputnik/torch.showcase
 ```
 
 `build/native-lock.json` содержит dependency identity текущей сборки.
@@ -95,7 +95,7 @@ PYTORCH_ENABLE_MPS_FALLBACK=0 PATH=/nonexistent ./build/sputnik/sputniktorch.sho
 `showcase-dylibs.log`. CPU/module/serialization/native DDP проверки сохранены
 в `build/full-suite-mnist.log`; после исправления VM bare destructor повторены
 CPU и VM DDP, выполнены MPS suites и MNIST smoke, с итоговым
-`PASS sputniktorch test suite` в `build/full-suite-mnist-resumed.log`.
+`PASS torch test suite` в `build/full-suite-mnist-resumed.log`.
 Полное обучение сохранено в `build/logs/mnist-full-train.log`, audit библиотек —
 в `build/logs/mnist-full-dylibs.log`.
 Сообщения launcher о failure и timeout в конце успешного прогона относятся

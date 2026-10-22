@@ -1,7 +1,7 @@
-package sputniktorch.nn.kl_div_loss
+package torch.nn.kl_div_loss
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import kl_div
+from torch.nn.module import Module
+from torch.nn.functional import kl_div
 
 export KLDivLoss
 

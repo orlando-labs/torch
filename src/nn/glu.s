@@ -1,6 +1,6 @@
-package sputniktorch.nn.glu
+package torch.nn.glu
 
-from sputniktorch.nn.module import Module
+from torch.nn.module import Module
 
 export GLU
 

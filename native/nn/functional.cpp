@@ -1,6 +1,19 @@
 #include "bridge.h"
 
-using namespace sputniktorch;
+using namespace sputnik_torch;
+
+namespace {
+void verify_normalization(const at::Tensor &x, bool instance, bool input_stats) {
+  require(x.dim() >= (instance ? 3 : 2), "Torch.Errors.ShapeError",
+          "normalization input has the wrong rank");
+  if (!input_stats) return;
+  bool single = instance || x.size(0) == 1;
+  for (int64_t i = 2; i < x.dim(); ++i) single &= x.size(i) == 1;
+  require(!single, "Torch.Errors.ShapeError",
+          instance ? "InstanceNorm needs more than one spatial element"
+                   : "training BatchNorm needs more than one value per channel");
+}
+} // namespace
 
 // Sputnik owns composition, registries and mode policy; this boundary only
 // marshals tensors/configuration into stable ATen kernels.
@@ -113,10 +126,18 @@ extern "C" SputnikStatus amt_nn(SputnikCtx *cx, const SputnikValue *a, size_t n,
       r = at::group_norm(x, integer_arg(0), input(1), input(2), num(1));
     else if (op == "batch_norm") {
       const bool training = bool_arg(0);
+      verify_normalization(x, false, training);
       require(!training || (!input(3).defined() && !input(4).defined()), "ArgumentError",
               "training with running buffers requires batch_norm!");
       r = at::batch_norm(x, input(1), input(2), input(3), input(4), training, num(1), num(2),
                          false);
+    } else if (op == "instance_norm") {
+      const bool input_stats = bool_arg(0);
+      verify_normalization(x, true, input_stats);
+      require(!input_stats || (!input(3).defined() && !input(4).defined()), "ArgumentError",
+              "input statistics with running buffers requires instance_norm!");
+      r = at::instance_norm(x, input(1), input(2), input(3), input(4), input_stats,
+                            num(1), num(2), false);
     } else if (op == "pad")
       r = at::pad(x, ints(0), string(cx, arg(1)), num(2));
     else if (op == "cat" || op == "stack") {
@@ -128,7 +149,7 @@ extern "C" SputnikStatus amt_nn(SputnikCtx *cx, const SputnikValue *a, size_t n,
       r = at::where(x, input(1), input(2));
     else if (op == "masked_softmax") {
       const auto mask = input(1);
-      require(mask.scalar_type() == at::kBool, "Sputniktorch.Errors.DTypeError",
+      require(mask.scalar_type() == at::kBool, "Torch.Errors.DTypeError",
               "attention mask must be boolean");
       const auto dim = integer_arg(0);
       auto scores = x.masked_fill(mask.logical_not(), -std::numeric_limits<double>::infinity());
@@ -148,6 +169,36 @@ extern "C" SputnikStatus amt_nn(SputnikCtx *cx, const SputnikValue *a, size_t n,
       r = at::huber_loss(x, input(1), integer_arg(0), num(1));
     else if (op == "kl_div")
       r = at::kl_div(x, input(1), integer_arg(0), bool_arg(1));
+    else if (op == "poisson_nll")
+      r = at::poisson_nll_loss(x, input(1), bool_arg(0), bool_arg(1), num(2), integer_arg(3));
+    else if (op == "soft_margin")
+      r = at::soft_margin_loss(x, input(1), integer_arg(0));
+    else if (op == "hinge_embedding")
+      r = at::hinge_embedding_loss(x, input(1), num(0), integer_arg(1));
+    else if (op == "margin_ranking")
+      r = at::margin_ranking_loss(x, input(1), input(2), num(0), integer_arg(1));
+    else if (op == "cosine_embedding")
+      r = at::cosine_embedding_loss(x, input(1), input(2), num(0), integer_arg(1));
+    else if (op == "multi_margin") {
+      const auto target = input(1);
+      require(target.scalar_type() == at::kLong, "Torch.Errors.DTypeError",
+              "multi-margin targets must be int64");
+      if (x.is_mps() && target.numel() > 0)
+        require(target.min().item<int64_t>() >= 0 && target.max().item<int64_t>() < x.size(-1),
+                "Torch.Errors.ShapeError", "multi-margin class is out of bounds");
+      r = at::multi_margin_loss(x, target, integer_arg(0), num(1), input(2), integer_arg(2));
+    } else if (op == "multilabel_margin")
+      r = at::multilabel_margin_loss(x, input(1), integer_arg(0));
+    else if (op == "pairwise_distance")
+      r = at::pairwise_distance(x, input(1), num(0), num(1), bool_arg(2));
+    else if (op == "cosine_similarity")
+      r = at::cosine_similarity(x, input(1), integer_arg(0), num(1));
+    else if (op == "triplet_margin")
+      r = at::triplet_margin_loss(x, input(1), input(2), num(0), num(1), num(2), bool_arg(3), integer_arg(4));
+    else if (op == "clamp_min")
+      r = x.clamp_min(num(0));
+    else if (op == "minimum")
+      r = at::minimum(x, input(1));
     else
       throw Error("ArgumentError", "unsupported NN kernel: " + op);
     *out = wrap(cx, std::move(r));
@@ -162,10 +213,27 @@ extern "C" SputnikStatus amt_batch_norm(SputnikCtx *cx, const SputnikValue *a, s
     auto tensor = [&](size_t i) {
       return sputnik_is_null(cx, a[i]) ? at::Tensor() : core(cx, a[i]).tensor;
     };
+    verify_normalization(tensor(0), false, boolean(cx, a[5]));
     for (size_t i : {3U, 4U})
       if (!sputnik_is_null(cx, a[i]))
         writable(core(cx, a[i]));
     *out = wrap(cx, at::batch_norm(tensor(0), tensor(1), tensor(2), tensor(3), tensor(4),
                                    boolean(cx, a[5]), number(cx, a[6]), number(cx, a[7]), false));
+  });
+}
+
+extern "C" SputnikStatus amt_instance_norm(SputnikCtx *cx, const SputnikValue *a, size_t n,
+                                         SputnikValue *out) {
+  return boundary(cx, [&] {
+    argc_check(n, 9);
+    ExecutionGuard mode(integer(cx, a[8]), boolean(cx, a[5]));
+    auto tensor = [&](size_t i) {
+      return sputnik_is_null(cx, a[i]) ? at::Tensor() : core(cx, a[i]).tensor;
+    };
+    verify_normalization(tensor(0), true, boolean(cx, a[5]));
+    for (size_t i : {3U, 4U})
+      if (!sputnik_is_null(cx, a[i])) writable(core(cx, a[i]));
+    *out = wrap(cx, at::instance_norm(tensor(0), tensor(1), tensor(2), tensor(3), tensor(4),
+                                     boolean(cx, a[5]), number(cx, a[6]), number(cx, a[7]), false));
   });
 }

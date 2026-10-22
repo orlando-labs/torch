@@ -1,6 +1,6 @@
-package sputniktorch.data.random_sampler
+package torch.data.random_sampler
 
-from sputniktorch.random.generator import Generator
+from torch.random.generator import Generator
 
 export RandomSampler
 

@@ -1,7 +1,7 @@
-package sputniktorch.nn.tanhshrink
+package torch.nn.tanhshrink
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import tanhshrink
+from torch.nn.module import Module
+from torch.nn.functional import tanhshrink
 
 export Tanhshrink
 

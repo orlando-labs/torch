@@ -1,7 +1,7 @@
-package sputniktorch.autograd.context
+package torch.autograd.context
 
 import task
-from sputniktorch.errors import ONNXError
+from torch.errors import ONNXError
 export grad_enabled?, inference_enabled?, no_grad, with_grad, inference_mode, execution_mode
 export with_trace
 

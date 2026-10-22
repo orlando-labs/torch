@@ -1,8 +1,8 @@
-package sputniktorch.nn.rms_norm
+package torch.nn.rms_norm
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import rms_norm
-from sputniktorch.tensor.factories import ones
+from torch.nn.module import Module
+from torch.nn.functional import rms_norm
+from torch.tensor.factories import ones
 
 export RMSNorm
 

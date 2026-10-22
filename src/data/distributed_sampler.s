@@ -1,7 +1,7 @@
-package sputniktorch.data.distributed_sampler
+package torch.data.distributed_sampler
 
-from sputniktorch.data.random_sampler import RandomSampler
-from sputniktorch.random.generator import Generator
+from torch.data.random_sampler import RandomSampler
+from torch.random.generator import Generator
 
 export DistributedSampler
 

@@ -1,8 +1,8 @@
-package sputniktorch.nn.group_norm
+package torch.nn.group_norm
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import group_norm
-from sputniktorch.tensor.factories import ones, zeros
+from torch.nn.module import Module
+from torch.nn.functional import group_norm
+from torch.tensor.factories import ones, zeros
 
 export GroupNorm
 

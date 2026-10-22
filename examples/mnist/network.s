@@ -1,8 +1,8 @@
-package sputniktorch.mnist.network
+package torch.mnist.network
 
-from sputniktorch.nn import Module, Conv2d, BatchNorm2d, ReLU, Sequential
-from sputniktorch.nn import AdaptiveAvgPool2d, Flatten, Linear
-from sputniktorch.mnist.residual_block import ResidualBlock
+from torch.nn import Module, Conv2d, BatchNorm2d, ReLU, Sequential
+from torch.nn import AdaptiveAvgPool2d, Flatten, Linear
+from torch.mnist.residual_block import ResidualBlock
 
 export SmallResNet
 

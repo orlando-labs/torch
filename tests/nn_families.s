@@ -1,24 +1,24 @@
-package sputniktorch.nn_families_test
+package torch.nn_families_test
 
-import sputniktorch
-from sputniktorch.nn import ReLU, Sigmoid, Tanh, GELU, SiLU, Mish, LeakyReLU
-from sputniktorch.nn import ELU, SELU, Softplus, Softsign, Tanhshrink, Hardtanh, Hardsigmoid
-from sputniktorch.nn import Hardswish, LogSigmoid, Softshrink, Hardshrink, Softmax, LogSoftmax, Softmin
-from sputniktorch.nn import ReLU6, Threshold, PReLU, Identity, GLU, Linear, Bilinear
-from sputniktorch.nn import Conv1d, Conv2d, Conv3d, ConvTranspose1d, ConvTranspose2d, ConvTranspose3d, MaxPool1d
-from sputniktorch.nn import AvgPool1d, AdaptiveAvgPool1d, AdaptiveMaxPool1d, MaxPool2d, AvgPool2d, AdaptiveAvgPool2d, AdaptiveMaxPool2d
-from sputniktorch.nn import MaxPool3d, AvgPool3d, AdaptiveAvgPool3d, AdaptiveMaxPool3d, BatchNorm1d, BatchNorm2d, BatchNorm3d
-from sputniktorch.nn import ConstantPad1d, ReflectionPad1d, ReplicationPad1d, ConstantPad2d, ReflectionPad2d, ReplicationPad2d, ConstantPad3d
-from sputniktorch.nn import ReflectionPad3d, ReplicationPad3d, GroupNorm, Softmax2d, MSELoss, L1Loss, SmoothL1Loss
-from sputniktorch.nn import HuberLoss, BCEWithLogitsLoss, BCELoss, NLLLoss, KLDivLoss, ModuleDict, ParameterList
-from sputniktorch.nn import ParameterDict
-from sputniktorch.nn.init import xavier_uniform!, xavier_normal!, kaiming_uniform!, kaiming_normal!, zeros!, ones!
-from sputniktorch.checks import check
+import torch
+from torch.nn import ReLU, Sigmoid, Tanh, GELU, SiLU, Mish, LeakyReLU
+from torch.nn import ELU, SELU, Softplus, Softsign, Tanhshrink, Hardtanh, Hardsigmoid
+from torch.nn import Hardswish, LogSigmoid, Softshrink, Hardshrink, Softmax, LogSoftmax, Softmin
+from torch.nn import ReLU6, Threshold, PReLU, Identity, GLU, Linear, Bilinear
+from torch.nn import Conv1d, Conv2d, Conv3d, ConvTranspose1d, ConvTranspose2d, ConvTranspose3d, MaxPool1d
+from torch.nn import AvgPool1d, AdaptiveAvgPool1d, AdaptiveMaxPool1d, MaxPool2d, AvgPool2d, AdaptiveAvgPool2d, AdaptiveMaxPool2d
+from torch.nn import MaxPool3d, AvgPool3d, AdaptiveAvgPool3d, AdaptiveMaxPool3d, BatchNorm1d, BatchNorm2d, BatchNorm3d
+from torch.nn import ConstantPad1d, ReflectionPad1d, ReplicationPad1d, ConstantPad2d, ReflectionPad2d, ReplicationPad2d, ConstantPad3d
+from torch.nn import ReflectionPad3d, ReplicationPad3d, GroupNorm, Softmax2d, MSELoss, L1Loss, SmoothL1Loss
+from torch.nn import HuberLoss, BCEWithLogitsLoss, BCELoss, NLLLoss, KLDivLoss, ModuleDict, ParameterList
+from torch.nn import ParameterDict
+from torch.nn.init import xavier_uniform!, xavier_normal!, kaiming_uniform!, kaiming_normal!, zeros!, ones!
+from torch.checks import check
 
 export main
 
 def main():
-  x = sputniktorch.linspace(-2.0, 2.0, steps: 12).reshape([3, 4]).requires_grad!(true)
+  x = torch.linspace(-2.0, 2.0, steps: 12).reshape([3, 4]).requires_grad!(true)
   activations = [ReLU(), Sigmoid(), Tanh(), GELU(), SiLU(), Mish(),
     LeakyReLU(), ELU(), SELU(), Softplus(), Softsign(), Tanhshrink(),
     Hardtanh(), Hardsigmoid(), Hardswish(), LogSigmoid(), Softshrink(),
@@ -34,8 +34,8 @@ def main():
   check(Linear(4, 2, bias: false)(x).shape == [3, 2], "bias-free dense layer")
   Bilinear(4, 4, 2)(x, x).sum().backward!()
 
-  images = [sputniktorch.randn([2, 2, 8], seed: 0),
-    sputniktorch.randn([2, 2, 8, 8], seed: 1), sputniktorch.randn([2, 2, 8, 8, 8], seed: 2)]
+  images = [torch.randn([2, 2, 8], seed: 0),
+    torch.randn([2, 2, 8, 8], seed: 1), torch.randn([2, 2, 8, 8, 8], seed: 2)]
   convolutions = [Conv1d(2, 4, 2, groups: 2), Conv2d(2, 4, 2, groups: 2), Conv3d(2, 4, 2, groups: 2)]
   transposed = [ConvTranspose1d(2, 4, 2), ConvTranspose2d(2, 4, 2), ConvTranspose3d(2, 4, 2)]
   pools = [[MaxPool1d(2), AvgPool1d(2), AdaptiveAvgPool1d(2), AdaptiveMaxPool1d(2)],
@@ -63,16 +63,16 @@ def main():
   check(GroupNorm(2, 2)(images[1]).shape == images[1].shape, "GroupNorm")
   check(Softmax2d()(images[1]).shape == images[1].shape, "spatial softmax")
 
-  target = sputniktorch.zeros_like(x)
+  target = torch.zeros_like(x)
   [MSELoss(), L1Loss(), SmoothL1Loss(), HuberLoss(), BCEWithLogitsLoss()].each |loss|:
     loss(x, target).backward!()
     check(x.grad != null, "regression loss backward")
     x.zero_grad!
   BCELoss()(x.sigmoid, target).backward!()
-  NLLLoss()(x.log_softmax(dim: 1), sputniktorch.tensor([0, 1, 2])).backward!()
-  KLDivLoss()(x.log_softmax(dim: 1), sputniktorch.full(x.shape, 0.25)).backward!()
+  NLLLoss()(x.log_softmax(dim: 1), torch.tensor([0, 1, 2])).backward!()
+  KLDivLoss()(x.log_softmax(dim: 1), torch.full(x.shape, 0.25)).backward!()
 
-  weights = sputniktorch.zeros([4, 4], requires_grad: true)
+  weights = torch.zeros([4, 4], requires_grad: true)
   [ &xavier_uniform!, &xavier_normal!, &kaiming_uniform!, &kaiming_normal! ].each |initialize|:
     initialize(weights, seed: 9)
     first = weights.to_a

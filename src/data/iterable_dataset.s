@@ -1,4 +1,4 @@
-package sputniktorch.data.iterable_dataset
+package torch.data.iterable_dataset
 
 export IterableDataset
 

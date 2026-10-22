@@ -1,6 +1,6 @@
-package sputniktorch.nn.module_dict
+package torch.nn.module_dict
 
-from sputniktorch.nn.module import Module
+from torch.nn.module import Module
 
 export ModuleDict
 

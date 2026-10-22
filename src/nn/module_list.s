@@ -1,6 +1,6 @@
-package sputniktorch.nn.module_list
+package torch.nn.module_list
 
-from sputniktorch.nn.module import Module
+from torch.nn.module import Module
 
 export ModuleList
 

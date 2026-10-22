@@ -1,6 +1,6 @@
-package sputniktorch.nn.conv_transpose1d
+package torch.nn.conv_transpose1d
 
-from sputniktorch.nn.convolution import Convolution
+from torch.nn.convolution import Convolution
 
 export ConvTranspose1d
 

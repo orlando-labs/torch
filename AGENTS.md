@@ -1,4 +1,4 @@
-# sputniktorch
+# torch
 
 Use Sputnik for model composition, optimizer/scheduler algorithms and data
 pipelines. Keep C++ at the LibTorch kernel, lifetime and serialization boundary.

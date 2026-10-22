@@ -1,7 +1,7 @@
-package sputniktorch.distributed.process_group
+package torch.distributed.process_group
 
-from sputniktorch.distributed.core import group_env as _group_env, group_open as _group_open
-from sputniktorch.distributed.core import collective! as _collective!, gloo_available?
+from torch.distributed.core import group_env as _group_env, group_open as _group_open
+from torch.distributed.core import collective! as _collective!, gloo_available?
 
 export ProcessGroup, open_group, group_from_env, gloo_available?
 

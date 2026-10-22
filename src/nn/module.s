@@ -1,8 +1,8 @@
-package sputniktorch.nn.module
+package torch.nn.module
 
-from sputniktorch.errors import ShapeError
-from sputniktorch.autograd.context import execution_mode
-from sputniktorch.tensor.value import Tensor
+from torch.errors import ShapeError
+from torch.autograd.context import execution_mode
+from torch.tensor.value import Tensor
 
 export Module
 
@@ -109,4 +109,4 @@ class Module:
   def call!(*inputs, **options): forward!(*inputs, **options)
   def forward!(*inputs, **options): forward(*inputs, **options)
 
-native def _load_parameter!(target, source, mode as Int) from "amt_load_parameter"
+native def _load_parameter!(target, source, mode as Int) from "amt_load_parameter" blocking

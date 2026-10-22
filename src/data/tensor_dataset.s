@@ -1,9 +1,9 @@
-package sputniktorch.data.tensor_dataset
+package torch.data.tensor_dataset
 
-from sputniktorch.data.dataset import Dataset
-from sputniktorch.tensor.factories import tensor
-from sputniktorch.tensor.value import Tensor
-from sputniktorch.tensor.foreach import index_select
+from torch.data.dataset import Dataset
+from torch.tensor.factories import tensor
+from torch.tensor.value import Tensor
+from torch.tensor.foreach import index_select
 
 export TensorDataset
 

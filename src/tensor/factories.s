@@ -1,8 +1,8 @@
-package sputniktorch.tensor.factories
+package torch.tensor.factories
 
-from sputniktorch.tensor.core import make, factory
-from sputniktorch.tensor.value import Tensor
-from sputniktorch.device import device_text
+from torch.tensor.core import make, factory
+from torch.tensor.value import Tensor
+from torch.device import device_text
 
 export tensor, zeros, ones, full, empty, eye, arange, linspace, randn, rand
 export zeros_like, ones_like, full_like, empty_like

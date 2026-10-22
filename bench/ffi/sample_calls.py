@@ -24,8 +24,8 @@ def main():
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     sputnik = ROOT.parent / "sputnik-lang/build/sputnik"
-    native = ROOT / "build/sputnik/sputniktorch.ffi_calls"
-    command = ([str(sputnik), "run", str(ROOT / "build/sputniktorch.ffi_calls.build.json"),
+    native = ROOT / "build/sputnik/torch.ffi_calls"
+    command = ([str(sputnik), "run", str(ROOT / "build/torch.ffi_calls.build.json"),
                 "--grant", "ffi", "--grant", "fs.read", "--"]
                if args.lane == "sputnik-vm" else [str(native)])
     command += ["--case", args.case, "--iterations", str(args.iterations),

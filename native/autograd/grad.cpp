@@ -1,11 +1,11 @@
 #include "bridge.h"
 #include <torch/csrc/autograd/autograd.h>
-using namespace sputniktorch;
+using namespace sputnik_torch;
 
 extern "C" SputnikStatus amt_grad(SputnikCtx *cx, const SputnikValue *a, size_t n, SputnikValue *out) {
   return boundary(cx, [&] {
     argc_check(n, 7);
-    require(integer(cx, a[6]) < 4, "Sputniktorch.Errors.ONNXError", "autograd.grad is unsupported during ONNX export");
+    require(integer(cx, a[6]) < 4, "Torch.Errors.ONNXError", "autograd.grad is unsupported during ONNX export");
     auto tensors = [&](SputnikValue list, bool optional) {
       require(sputnik_is_list(cx, list), "TypeError", "grad requires tensor lists");
       std::vector<at::Tensor> result;

@@ -8,7 +8,7 @@
 #include <string>
 #include <time.h>
 
-namespace sputniktorch {
+namespace sputnik_torch {
 // Opt-in diagnostic only. CPU time separates host work from MPS waits; nested
 // callbacks have exclusive totals so execution_batch does not double count
 // every kernel. Timings include argument validation and the LibTorch call.
@@ -84,4 +84,4 @@ struct BoundaryProfileScope {
     }
   }
 };
-} // namespace sputniktorch
+} // namespace sputnik_torch

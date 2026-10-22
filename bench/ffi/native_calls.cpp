@@ -1,7 +1,7 @@
 #include "bridge.h"
 #include "raw_calls.h"
 
-using namespace sputniktorch;
+using namespace sputnik_torch;
 
 extern "C" {
 // Minimal ABI controls deliberately omit the production exception/validation

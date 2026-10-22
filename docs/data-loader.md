@@ -1,7 +1,7 @@
 # DataLoader и no-GIL Sputnik tasks
 
 ```sputnik
-from sputniktorch.data import DataLoader
+from torch.data import DataLoader
 
 batches = DataLoader(dataset, batch_size: 64, shuffle: true, seed: 7,
   num_workers: 4, prefetch_factor: 2)

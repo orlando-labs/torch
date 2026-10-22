@@ -1,4 +1,4 @@
-package sputniktorch.data.sequential_sampler
+package torch.data.sequential_sampler
 
 export SequentialSampler
 

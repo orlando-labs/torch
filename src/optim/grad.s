@@ -1,6 +1,6 @@
-package sputniktorch.optim.grad
+package torch.optim.grad
 
-from sputniktorch.autograd import no_grad
+from torch.autograd import no_grad
 
 export clip_grad_norm!, clip_grad_value!
 

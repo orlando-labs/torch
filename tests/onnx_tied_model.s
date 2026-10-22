@@ -1,7 +1,7 @@
-package sputniktorch.onnx_tied_model
+package torch.onnx_tied_model
 
-import sputniktorch
-from sputniktorch.nn import Module
+import torch
+from torch.nn import Module
 
 export TiedModel
 
@@ -10,7 +10,7 @@ class TiedModel < Module:
 
   def init(device):
     _initialize_registry!
-    @weight = sputniktorch.ones([3], device:, requires_grad: true)
+    @weight = torch.ones([3], device:, requires_grad: true)
     register_parameter!("first", @weight)
     register_parameter!("second", @weight)
 

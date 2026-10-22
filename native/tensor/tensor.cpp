@@ -1,4 +1,5 @@
 #include "bridge.h"
+#include "kernel_args.h"
 #include <ATen/CPUGeneratorImpl.h>
 #include <ATen/Parallel.h>
 #include <cmath>
@@ -7,7 +8,7 @@
 #include <type_traits>
 #include <unordered_set>
 
-using namespace sputniktorch;
+using namespace sputnik_torch;
 namespace {
 at::Scalar scalar(SputnikCtx *cx, SputnikValue v) {
   int b;
@@ -22,27 +23,7 @@ at::Scalar scalar(SputnikCtx *cx, SputnikValue v) {
   throw Error("TypeError", "expected a numeric scalar");
 }
 at::ScalarType dtype(const std::string &name) {
-  if (name == "float32")
-    return at::kFloat;
-  if (name == "float64")
-    return at::kDouble;
-  if (name == "float16")
-    return at::kHalf;
-  if (name == "bfloat16")
-    return at::kBFloat16;
-  if (name == "int64")
-    return at::kLong;
-  if (name == "int32")
-    return at::kInt;
-  if (name == "int16")
-    return at::kShort;
-  if (name == "int8")
-    return at::kChar;
-  if (name == "uint8")
-    return at::kByte;
-  if (name == "bool")
-    return at::kBool;
-  throw Error("Sputniktorch.Errors.DTypeError", "unsupported dtype: " + name);
+  return tensor_dtype(name);
 }
 std::string dtype_name(at::ScalarType type) {
   switch (type) {
@@ -54,6 +35,10 @@ std::string dtype_name(at::ScalarType type) {
     return "float16";
   case at::kBFloat16:
     return "bfloat16";
+  case at::kComplexFloat:
+    return "complex64";
+  case at::kComplexDouble:
+    return "complex128";
   case at::kLong:
     return "int64";
   case at::kInt:
@@ -67,37 +52,29 @@ std::string dtype_name(at::ScalarType type) {
   case at::kBool:
     return "bool";
   default:
-    throw Error("Sputniktorch.Errors.DTypeError", "unsupported tensor dtype");
+    throw Error("Torch.Errors.DTypeError", "unsupported tensor dtype");
   }
 }
 at::Device device(const std::string &name) {
-  const at::Device d(name);
-  require(d.is_cpu() || d.is_mps(), "Sputniktorch.Errors.DeviceError",
-          "this build supports cpu and mps");
-  require(!d.has_index() || d.index() == 0, "Sputniktorch.Errors.DeviceError",
-          "only device index 0 is supported");
-  if (d.is_mps())
-    require(torch::mps::is_available(), "Sputniktorch.Errors.DeviceError",
-            "MPS is unavailable to this process");
-  return d.is_cpu() ? at::Device(at::kCPU) : at::Device(at::kMPS);
+  return tensor_device(name);
 }
 void placement(at::ScalarType t, const at::Device &d) {
-  require(!(d.is_mps() && t == at::kDouble), "Sputniktorch.Errors.DTypeError",
-          "MPS does not support float64; cast explicitly");
+  require(!(d.is_mps() && (t == at::kDouble || t == at::kComplexDouble)),
+          "Torch.Errors.DTypeError", "MPS does not support float64/complex128; cast explicitly");
 }
 void check_shape(const std::vector<int64_t> &dims) {
   int64_t count = 1;
-  require(dims.size() <= 64, "Sputniktorch.Errors.ShapeError", "rank exceeds 64");
+  require(dims.size() <= 64, "Torch.Errors.ShapeError", "rank exceeds 64");
   for (auto d : dims) {
-    require(d >= 0, "Sputniktorch.Errors.ShapeError", "negative factory dimension");
+    require(d >= 0, "Torch.Errors.ShapeError", "negative factory dimension");
     require(d == 0 || count <= std::numeric_limits<int64_t>::max() / d,
-            "Sputniktorch.Errors.ShapeError", "shape size overflows int64");
+            "Torch.Errors.ShapeError", "shape size overflows int64");
     count *= d;
   }
 }
 std::vector<int64_t> flatten(SputnikCtx *cx, SputnikValue v, std::vector<at::Scalar> &values,
                              size_t depth = 0) {
-  require(depth <= 64, "Sputniktorch.Errors.ShapeError", "nested tensor input exceeds rank 64");
+  require(depth <= 64, "Torch.Errors.ShapeError", "nested tensor input exceeds rank 64");
   if (!sputnik_is_list(cx, v)) {
     values.push_back(scalar(cx, v));
     return {};
@@ -109,7 +86,7 @@ std::vector<int64_t> flatten(SputnikCtx *cx, SputnikValue v, std::vector<at::Sca
     if (i == 0)
       sub = current;
     else
-      require(current == sub, "Sputniktorch.Errors.ShapeError", "ragged tensor input");
+      require(current == sub, "Torch.Errors.ShapeError", "ragged tensor input");
   }
   sub.insert(sub.begin(), static_cast<int64_t>(n));
   return sub;
@@ -118,17 +95,23 @@ template <class T> void fill_data(at::Tensor &t, const std::vector<at::Scalar> &
   auto *data = t.data_ptr<T>();
   for (size_t i = 0; i < values.size(); ++i) {
     if constexpr (std::is_integral_v<T> && !std::is_same_v<T, bool>) {
-      require(values[i].isIntegral(true), "Sputniktorch.Errors.DTypeError",
+      require(values[i].isIntegral(true), "Torch.Errors.DTypeError",
               "integer tensor construction requires integral values");
       auto value = values[i].toLong();
       require(value >= std::numeric_limits<T>::min() && value <= std::numeric_limits<T>::max(),
-              "Sputniktorch.Errors.DTypeError", "scalar outside dtype range");
+              "Torch.Errors.DTypeError", "scalar outside dtype range");
       data[i] = static_cast<T>(value);
     } else
       data[i] = values[i].to<T>();
   }
 }
 SputnikValue scalar_value(SputnikCtx *cx, const at::Tensor &t) {
+  if (t.is_complex()) {
+    const auto value = t.item<c10::complex<double>>();
+    const SputnikValue parts[] = {sputnik_make_float(cx, value.real()),
+                                  sputnik_make_float(cx, value.imag())};
+    return sputnik_make_list(cx, parts, 2);
+  }
   if (t.scalar_type() == at::kBool)
     return sputnik_make_bool(cx, t.item<bool>());
   if (at::isIntegralType(t.scalar_type(), false))
@@ -205,6 +188,83 @@ void amt_tensor_free(void *ptr) {
   }
 TENSOR_QUERY(rank, sputnik_make_int(cx, t.dim()))
 TENSOR_QUERY(numel, sputnik_make_int(cx, t.numel()))
+
+// Optional typed leaf sidecar. The host has already checked the TensorCore tag
+// and tombstone; no SputnikCtx/arena or result-builder callback is needed.
+static SputnikStatus tensor_numel_leaf(const void *receiver, int64_t *out,
+                                      const SputnikLeafFault *fault) noexcept {
+  BoundaryProfileScope profile("amt_tensor_numel_leaf");
+  try {
+    *out = static_cast<const TensorCore *>(receiver)->tensor.numel();
+    return SPUTNIK_OK;
+  } catch (const Error &e) {
+    return sputnik_leaf_fault(fault, error_class(e.kind), e.what());
+  } catch (const c10::Error &e) {
+    return sputnik_leaf_fault(fault, error_class("Torch.Errors.Error"), e.what_without_backtrace());
+  } catch (const std::bad_alloc &) {
+    return sputnik_leaf_fault(fault, error_class("Torch.Errors.Error"), "native allocation failed");
+  } catch (const std::exception &e) {
+    return sputnik_leaf_fault(fault, error_class("Torch.Errors.Error"), e.what());
+  } catch (...) {
+    return sputnik_leaf_fault(fault, error_class("Torch.Errors.Error"), "unknown native exception");
+  }
+}
+
+extern "C" const SputnikLeafDescriptor *amt_tensor_numel_sputnik_leaf_v1() {
+  static const SputnikLeafDescriptor descriptor{
+      SPUTNIK_LEAF_ABI_VERSION, sizeof(SputnikLeafDescriptor),
+      SPUTNIK_LEAF_HANDLE_INT, tensor_tag, {&tensor_numel_leaf}};
+  return &descriptor;
+}
+
+static at::Tensor tensor_relu(const TensorCore &value, int64_t execution) {
+  ExecutionGuard mode(execution);
+  return value.tensor.relu();
+}
+
+SputnikStatus amt_tensor_relu(SputnikCtx *cx, SputnikValue self,
+                             const SputnikValue *args, size_t argc,
+                             SputnikValue *out) {
+  return boundary(cx, [&] {
+    argc_check(argc, 1);
+    *out = wrap(cx, tensor_relu(core(cx, self), integer(cx, args[0])));
+  });
+}
+
+static SputnikStatus tensor_relu_leaf(const void *receiver, int64_t execution,
+                                      void **out, const SputnikLeafFault *fault) noexcept {
+  BoundaryProfileScope profile("amt_tensor_relu_leaf");
+  try {
+    auto result = std::make_unique<TensorCore>(TensorCore{
+        tensor_relu(*static_cast<const TensorCore *>(receiver), execution), false});
+    *out = result.release();
+    return SPUTNIK_OK;
+  } catch (const Error &e) {
+    return sputnik_leaf_fault(fault, error_class(e.kind), e.what());
+  } catch (const c10::Error &e) {
+    return sputnik_leaf_fault(fault, error_class("Torch.Errors.Error"), e.what_without_backtrace());
+  } catch (const std::bad_alloc &) {
+    return sputnik_leaf_fault(fault, error_class("Torch.Errors.Error"), "native allocation failed");
+  } catch (const std::exception &e) {
+    return sputnik_leaf_fault(fault, error_class("Torch.Errors.Error"), e.what());
+  } catch (...) {
+    return sputnik_leaf_fault(fault, error_class("Torch.Errors.Error"), "unknown native exception");
+  }
+}
+
+extern "C" const SputnikLeafDescriptor *amt_tensor_relu_sputnik_leaf_v2() {
+  static const SputnikLeafDescriptor descriptor = [] {
+    SputnikLeafDescriptor result{};
+    result.abi_version = SPUTNIK_LEAF_ABI_VERSION_2;
+    result.struct_size = sizeof(SputnikLeafDescriptor);
+    result.signature = SPUTNIK_LEAF_HANDLE_INT_HANDLE;
+    result.receiver_tag = tensor_tag;
+    result.handle_int_handle = &tensor_relu_leaf;
+    return result;
+  }();
+  return &descriptor;
+}
+
 TENSOR_QUERY(dtype, text(cx, dtype_name(t.scalar_type())))
 TENSOR_QUERY(device, text(cx, t.device().str()))
 TENSOR_QUERY(requires_grad, sputnik_make_bool(cx, t.requires_grad()))
@@ -245,12 +305,25 @@ SputnikStatus amt_info(SputnikCtx *cx, const SputnikValue *a, size_t n, SputnikV
       *out = sputnik_make_bool(cx, at::hasMPS());
     else if (key == "mps_available")
       *out = sputnik_make_bool(cx, torch::mps::is_available());
+    else if (key == "cuda_built")
+      *out = sputnik_make_bool(cx, at::hasCUDA());
+    else if (key == "cuda_available")
+      *out = sputnik_make_bool(cx, at::getNumGPUs() > 0);
+    else if (key == "cuda_device_count")
+      *out = sputnik_make_int(cx, at::getNumGPUs());
     else if (key == "synchronize") {
-      if (torch::mps::is_available())
-        torch::mps::synchronize();
+      synchronize_devices();
       *out = sputnik_make_null(cx);
     } else
       throw Error("ArgumentError", "unknown info key");
+  });
+}
+SputnikStatus amt_synchronize(SputnikCtx *cx, const SputnikValue *, size_t n,
+                              SputnikValue *out) {
+  return boundary(cx, [&] {
+    argc_check(n, 0);
+    synchronize_devices();
+    *out = sputnik_make_null(cx);
   });
 }
 SputnikStatus amt_tensor(SputnikCtx *cx, const SputnikValue *a, size_t n, SputnikValue *out) {
@@ -286,6 +359,12 @@ SputnikStatus amt_tensor(SputnikCtx *cx, const SputnikValue *a, size_t n, Sputni
     case at::kBFloat16:
       fill_data<at::BFloat16>(t, values);
       break;
+    case at::kComplexFloat:
+      fill_data<c10::complex<float>>(t, values);
+      break;
+    case at::kComplexDouble:
+      fill_data<c10::complex<double>>(t, values);
+      break;
     case at::kLong:
       fill_data<int64_t>(t, values);
       break;
@@ -305,7 +384,7 @@ SputnikStatus amt_tensor(SputnikCtx *cx, const SputnikValue *a, size_t n, Sputni
       fill_data<bool>(t, values);
       break;
     default:
-      throw Error("Sputniktorch.Errors.DTypeError", "unsupported dtype");
+      throw Error("Torch.Errors.DTypeError", "unsupported dtype");
     }
     t = t.to(dev);
     t.set_requires_grad(boolean(cx, a[3]));
@@ -332,6 +411,13 @@ SputnikStatus amt_factory(SputnikCtx *cx, const SputnikValue *a, size_t n, Sputn
       t = at::empty(shape, options);
     else if (op == "full")
       t = at::full(shape, scalar(cx, a[5]), options);
+    else if (op == "fftfreq" || op == "rfftfreq") {
+      require(shape.size() == 1 && shape[0] > 0, "ArgumentError", "frequency size must be positive");
+      const auto spacing = number(cx, a[5]);
+      require(std::isfinite(spacing) && spacing != 0, "ArgumentError", "frequency spacing must be finite and nonzero");
+      t = op == "fftfreq" ? at::fft_fftfreq(shape[0], spacing, options)
+                           : at::fft_rfftfreq(shape[0], spacing, options);
+    }
     else if (op == "eye") {
       require(shape.size() == 2, "ArgumentError", "eye needs rows and columns");
       t = at::eye(shape[0], shape[1], options);
@@ -361,7 +447,7 @@ SputnikStatus amt_meta(SputnikCtx *cx, const SputnikValue *a, size_t n, SputnikV
     auto &c = core(cx, a[0]);
     const auto &t = c.tensor;
     auto op = string(cx, a[1]);
-    require(execution < 4 || (op != "item" && op != "to_a"), "Sputniktorch.Errors.ONNXError",
+    require(execution < 4 || (op != "item" && op != "to_a"), "Torch.Errors.ONNXError",
             "tensor data cannot be materialized as Sputnik scalars/arrays during ONNX export");
     if (op == "shape" || op == "strides") {
       std::vector<SputnikValue> values;
@@ -385,6 +471,8 @@ SputnikStatus amt_meta(SputnikCtx *cx, const SputnikValue *a, size_t n, SputnikV
       *out = sputnik_make_bool(cx, c.readonly);
     else if (op == "contiguous")
       *out = sputnik_make_bool(cx, t.is_contiguous());
+    else if (op == "sparse")
+      *out = sputnik_make_bool(cx, t.is_sparse());
     else if (op == "grad")
       *out = t.grad().defined() ? wrap(cx, t.grad(), c.readonly) : sputnik_make_null(cx);
     else if (op == "identity")
@@ -399,12 +487,12 @@ SputnikStatus amt_materialize(SputnikCtx *cx, const SputnikValue *a, size_t n, S
     argc_check(n, 3);
     const auto execution = integer(cx, a[2]);
     ExecutionGuard mode(execution);
-    require(execution < 4, "Sputniktorch.Errors.ONNXError",
+    require(execution < 4, "Torch.Errors.ONNXError",
             "tensor data cannot be materialized as Sputnik scalars/arrays during ONNX export");
     const auto &t = core(cx, a[0]).tensor;
     auto op = string(cx, a[1]);
     if (op == "item") {
-      require(t.numel() == 1, "Sputniktorch.Errors.ShapeError", "item requires exactly one element");
+      require(t.numel() == 1, "Torch.Errors.ShapeError", "item requires exactly one element");
       *out = scalar_value(cx, t);
     } else if (op == "to_a")
       *out = array_value(cx, t.detach().cpu());
@@ -459,6 +547,10 @@ SputnikStatus amt_binary(SputnikCtx *cx, const SputnikValue *a, size_t n, Sputni
       result = x.tensor / y;
     else if (op == "matmul")
       result = x.tensor.matmul(y);
+    else if (op == "complex")
+      result = at::complex(x.tensor, y);
+    else if (op == "polar")
+      result = at::polar(x.tensor, y);
     else if (op == "eq")
       result = x.tensor.eq(y);
     else if (op == "ne")
@@ -515,6 +607,13 @@ SputnikStatus amt_unary(SputnikCtx *cx, const SputnikValue *a, size_t n, Sputnik
       r = x.sin();
     else if (op == "cos")
       r = x.cos();
+    else if (op == "real") { r = at::real(x); ro = c.readonly; }
+    else if (op == "imag") { r = at::imag(x); ro = c.readonly; }
+    else if (op == "conj") { r = x.conj(); ro = c.readonly; }
+    else if (op == "resolve_conj") { r = x.resolve_conj(); ro = c.readonly; }
+    else if (op == "angle") r = at::angle(x);
+    else if (op == "view_as_real") { r = at::view_as_real(x); ro = c.readonly; }
+    else if (op == "view_as_complex") { r = at::view_as_complex(x); ro = c.readonly; }
     else if (op == "clamp") {
       require(sputnik_is_list(cx, a[2]) && sputnik_list_len(cx, a[2]) == 2, "ArgumentError",
               "clamp needs bounds");
@@ -552,6 +651,9 @@ SputnikStatus amt_unary(SputnikCtx *cx, const SputnikValue *a, size_t n, Sputnik
     } else if (op == "contiguous") {
       r = x.contiguous();
       ro = c.readonly;
+    } else if (op == "to_dense") {
+      r = x.to_dense();
+      ro = c.readonly && x.layout() == at::kStrided;
     } else if (op == "copy")
       r = x.clone();
     else if (op == "snapshot") {
@@ -611,11 +713,11 @@ SputnikStatus amt_mutate(SputnikCtx *cx, const SputnikValue *a, size_t n, Sputni
       t.set_requires_grad(boolean(cx, a[2]));
     else if (op == "copy_from") {
       auto &source = core(cx, a[2]).tensor;
-      require(t.sizes() == source.sizes(), "Sputniktorch.Errors.ShapeError",
+      require(t.sizes() == source.sizes(), "Torch.Errors.ShapeError",
               "copy_from! requires the same shape");
-      require(t.scalar_type() == source.scalar_type(), "Sputniktorch.Errors.DTypeError",
+      require(t.scalar_type() == source.scalar_type(), "Torch.Errors.DTypeError",
               "copy_from! requires the same dtype");
-      require(t.device() == source.device(), "Sputniktorch.Errors.DeviceError",
+      require(t.device() == source.device(), "Torch.Errors.DeviceError",
               "copy_from! requires the same device; use to explicitly");
       t.copy_(source);
     } else if (op == "set_grad") {
@@ -625,7 +727,7 @@ SputnikStatus amt_mutate(SputnikCtx *cx, const SputnikValue *a, size_t n, Sputni
         const auto &gradient = core(cx, a[2]).tensor;
         require(t.sizes() == gradient.sizes() && t.scalar_type() == gradient.scalar_type() &&
                     t.device() == gradient.device() && gradient.layout() == at::kStrided,
-                "Sputniktorch.Errors.AutogradError", "grad! requires matching dense values");
+                "Torch.Errors.AutogradError", "grad! requires matching dense values");
         at::NoGradGuard guard;
         t.mutable_grad() = gradient.detach().clone();
       }
@@ -662,7 +764,7 @@ SputnikStatus amt_mutate(SputnikCtx *cx, const SputnikValue *a, size_t n, Sputni
 SputnikStatus amt_backward(SputnikCtx *cx, const SputnikValue *a, size_t n, SputnikValue *out) {
   return boundary(cx, [&] {
     argc_check(n, 5);
-    require(integer(cx, a[4]) < 4, "Sputniktorch.Errors.ONNXError", "backward is forbidden during ONNX export");
+    require(integer(cx, a[4]) < 4, "Torch.Errors.ONNXError", "backward is forbidden during ONNX export");
     at::AutoGradMode mode(true);
     auto &c = core(cx, a[0]);
     writable(c);
@@ -680,7 +782,7 @@ SputnikStatus amt_load_parameter(SputnikCtx *cx, const SputnikValue *a, size_t n
     writable(dst);
     require(dst.tensor.sizes() == src.tensor.sizes() &&
                 dst.tensor.scalar_type() == src.tensor.scalar_type(),
-            "Sputniktorch.Errors.ShapeError", "parameter shape/dtype mismatch");
+            "Torch.Errors.ShapeError", "parameter shape/dtype mismatch");
     at::NoGradGuard guard;
     dst.tensor.copy_(src.tensor);
     *out = a[0];

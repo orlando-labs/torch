@@ -1,11 +1,11 @@
-package sputniktorch.onnx.exporter
+package torch.onnx.exporter
 
-from sputniktorch.errors import ONNXError
-from sputniktorch.tensor.value import Tensor
-from sputniktorch.nn.module import Module
-from sputniktorch.autograd.context import no_grad, with_trace
-from sputniktorch.onnx.trace import Trace
-from sputniktorch.onnx.program import Program
+from torch.errors import ONNXError
+from torch.tensor.value import Tensor
+from torch.nn.module import Module
+from torch.autograd.context import no_grad, with_trace
+from torch.onnx.trace import Trace
+from torch.onnx.program import Program
 
 export export_model
 

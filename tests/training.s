@@ -1,14 +1,14 @@
-package sputniktorch.training_test
+package torch.training_test
 
-import sputniktorch
+import torch
 import task
-from sputniktorch.autograd import grad_enabled?
-from sputniktorch.backends import execution_batch
-from sputniktorch.optim import SGD, Adam, AdamW, clip_grad_norm!, clip_grad_value!
-from sputniktorch.optim.lr_scheduler import StepLR, CosineAnnealingLR, ReduceLROnPlateau
-from sputniktorch.data import TensorDataset, Subset, ConcatDataset, DataLoader, RandomSampler, DistributedSampler, default_collate
-from sputniktorch.data import Dataset, IterableDataset
-from sputniktorch.checks import check
+from torch.autograd import grad_enabled?
+from torch.backends import execution_batch
+from torch.optim import SGD, Adam, AdamW, clip_grad_norm!, clip_grad_value!
+from torch.optim.lr_scheduler import StepLR, CosineAnnealingLR, ReduceLROnPlateau
+from torch.data import TensorDataset, Subset, ConcatDataset, DataLoader, RandomSampler, DistributedSampler, default_collate
+from torch.data import Dataset, IterableDataset
+from torch.checks import check
 
 export main, run
 
@@ -26,7 +26,7 @@ def run(device):
   rescue NoMethodError |error|:
     abstract_refused = true
   check(abstract_refused, "dataset base reports an unimplemented Sputnik method")
-  p = sputniktorch.tensor([1.0], device:, requires_grad: true)
+  p = torch.tensor([1.0], device:, requires_grad: true)
   optimizer = SGD([p, p], lr: 0.1, momentum: 0.9)
   check(optimizer.parameters.count == 1, "tied parameter deduplication")
   (p * 2).sum().backward!()
@@ -45,7 +45,7 @@ def run(device):
   optimizer.zero_grad!
   check(p.grad == null, "bare zero_grad! releases buffers")
 
-  p = sputniktorch.tensor([1.0], device:, requires_grad: true)
+  p = torch.tensor([1.0], device:, requires_grad: true)
   betas = [0.5, 0.5]
   optimizer = Adam([p], lr: 0.1, betas:, eps: 1e-8)
   betas[0] = 0.9
@@ -74,15 +74,15 @@ def run(device):
   optimizer.step!
   near(p.item, continued)
 
-  p = sputniktorch.tensor([1.0], device:, requires_grad: true)
+  p = torch.tensor([1.0], device:, requires_grad: true)
   optimizer = AdamW([p], lr: 0.1, weight_decay: 0.1)
   p.sum().backward!()
   optimizer.step!
   near(p.item, 0.89)
 
   # Packed updates must mutate the existing parameters and their views.
-  packed_left = sputniktorch.tensor([1.0, -2.0], device:, requires_grad: true)
-  packed_right = sputniktorch.tensor([3.0], device:, requires_grad: true)
+  packed_left = torch.tensor([1.0, -2.0], device:, requires_grad: true)
+  packed_right = torch.tensor([3.0], device:, requires_grad: true)
   alias = packed_left.detach.reshape([1, 2])
   identity = packed_left._identity
   retained = packed_left.square.sum
@@ -96,7 +96,7 @@ def run(device):
   version_checked = false
   try:
     retained.backward!
-  rescue Sputniktorch.Errors.Error |error|:
+  rescue Torch.Errors.Error |error|:
     version_checked = true
   check(version_checked, "packed update preserves autograd mutation checks")
   saved_packed = packed_optimizer.state_dict
@@ -107,7 +107,7 @@ def run(device):
   check(saved_packed[:steps] == [1, 1], "packed checkpoint counters remain independent")
   near(saved_packed[:first][0][0].item, 0.1)
 
-  storage = sputniktorch.tensor([1.0], device:)
+  storage = torch.tensor([1.0], device:)
   aliased_left = storage.detach.requires_grad!(true)
   aliased_right = storage.detach.requires_grad!(true)
   aliased = AdamW([aliased_left, aliased_right], lr: 0.1, weight_decay: 0.1)
@@ -118,11 +118,11 @@ def run(device):
 
   # A foreach update must preserve independent counters, absent gradients,
   # mixed dtypes and immutable optimizer snapshots.
-  left = sputniktorch.tensor([1.0], device:, requires_grad: true)
+  left = torch.tensor([1.0], device:, requires_grad: true)
   right_dtype = if device == "cpu" then "float64" else "float32"
-  right = sputniktorch.tensor([3.0], device:, dtype: right_dtype, requires_grad: true)
+  right = torch.tensor([3.0], device:, dtype: right_dtype, requires_grad: true)
   grouped = AdamW([left, right], lr: 0.1, betas: (0.5, 0.5), weight_decay: 0.1)
-  left.grad!(sputniktorch.tensor([2.0], device:))
+  left.grad!(torch.tensor([2.0], device:))
   grouped.step!
   near(left.item, 0.89)
   near(right.item, 3.0)
@@ -130,7 +130,7 @@ def run(device):
   check(first_state[:steps] == [1, 0], "missing gradients do not advance steps or decay parameters")
   check(first_state[:first][0].readonly?, "optimizer state is a read-only snapshot")
   grouped.zero_grad!
-  right.grad!(sputniktorch.tensor([3.0], device:, dtype: right_dtype))
+  right.grad!(torch.tensor([3.0], device:, dtype: right_dtype))
   grouped.step!
   near(left.item, 0.89)
   near(right.item, 2.87)
@@ -141,8 +141,8 @@ def run(device):
   near(gradient_alias.item, 0.0)
   check(right.grad != null, "grouped buffer reset retains gradient identity")
   grouped.zero_grad!
-  left.grad!(sputniktorch.tensor([4.0], device:))
-  right.grad!(sputniktorch.tensor([4.0], device:, dtype: right_dtype))
+  left.grad!(torch.tensor([4.0], device:))
+  right.grad!(torch.tensor([4.0], device:, dtype: right_dtype))
   grouped.step!
   near(left.item, 0.89 * 0.99 - 0.1 * (2.5 / 0.75) / ((9.0 / 0.75) ** 0.5 + 1e-8))
   near(right.item, 2.87 * 0.99 - 0.1 * (2.75 / 0.75) / ((10.25 / 0.75) ** 0.5 + 1e-8))
@@ -195,7 +195,7 @@ def run(device):
   plateau.step!(1.0).step!(1.1)
   near(optimizer.lr, 0.0125)
 
-  x = sputniktorch.arange(5, device:)
+  x = torch.arange(5, device:)
   y = x * 2
   dataset = TensorDataset(x, y)
   check(dataset.count == 5, "tensor dataset length")

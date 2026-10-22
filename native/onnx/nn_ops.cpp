@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace sputniktorch::onnx_export {
+namespace sputnik_torch::onnx_export {
 bool Lowering::lower_nn(Node *source) {
   const std::string name = source->kind().toQualString();
   auto arg = [&](size_t i) { return source->input(i); };

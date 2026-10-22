@@ -51,15 +51,40 @@ Runner отдельно проверяет compiler, которым собран
 hash обоих compiler binaries. Native executable и C ABI controls остаются
 общими для двух VM; native fingerprint продолжает проверяться полностью.
 
+`--before-native PATH --before-build-log PATH` добавляет сохранённый native
+executable в тот же A/B. Нужен его исходный build log с полным native-покрытием,
+отсутствием bytecode fallback и совпадающим binary hash. Эти два аргумента
+обязательны вместе; можно одновременно добавить `--before-vm`. Старый native
+содержит собственный адаптер, поэтому исходники адаптера между сборками должны
+совпадать, если нужно изолировать именно runtime/compiler.
+
 `--before-vm PATH` добавляет сохранённую VM четвёртой lane в тот же вращающийся
 порядок процессов. Это позволяет сравнивать две VM внутри одного прогона,
 с общими manifest/adapter и native/Python controls; оба executable hashes
 проверяются до и после. Для перенесённого compiler runner задаёт runtime root.
+`--before-vm-manifest PATH` задаёт ей сохранённые module/adapter inputs, когда
+меняется и C++ boundary. Их hashes проверяются до и после; без этой опции обе
+VM используют текущий адаптер и изолируют только изменение VM runtime.
+`--before-vm-runtime-root PATH` задаёт сохранённый SDK для компиляции старого
+адаптера. Так при изменении typed ABI старая VM получает и прежний C header;
+его hash проверяется до и после измерения.
 
 Измерения, конкретные функции в samples и следующие оптимизации описаны в
 [профилировании 2026-10-05](../../docs/ffi-call-profile.md).
 Оптимизация самих вызовов и проверенные A/B:
 [обвязка 2026-10-06](../../docs/native-call-overhead-profile.md).
+Native cache race, attr/default paths, list/arena ablations и оставшийся
+разрыв с Python: [native dispatch 2026-10-07](../../docs/native-dispatch-profile.md).
+Причины медленного numel, общий native frame/metadata fast path и приоритеты
+native/VM: [numel 2026-10-08](../../docs/native-numel-profile.md).
+Первый optional typed ABI, выигрыш native numel и отсутствие выигрыша VM:
+[typed leaf 2026-10-08](../../docs/typed-leaf-abi-profile.md).
+Оптимизация TaskLocal и autograd carrier state, CPU/MPS A/B и оставшийся разрыв:
+[execution mode 2026-10-08](../../docs/execution-mode-profile.md).
+Direct method entry, trivial bodies и typed forwarding в native/VM:
+[call fast paths 2026-10-08](../../docs/call-fast-profile.md).
+Coallocation результата, empty constructor и typed resource ABI для public relu:
+[typed results 2026-10-09](../../docs/typed-resource-result-profile.md).
 
 Stack samples выполняются отдельно от timing results:
 

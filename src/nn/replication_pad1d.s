@@ -1,7 +1,7 @@
-package sputniktorch.nn.replication_pad1d
+package torch.nn.replication_pad1d
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import kernel, spatial
+from torch.nn.module import Module
+from torch.nn.functional import kernel, spatial
 
 export ReplicationPad1d
 

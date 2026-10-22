@@ -61,7 +61,7 @@ def parse_sample(stdout, wall):
     if len(records) != 1:
         raise ValueError("Expected exactly one MNIST_BENCH result")
     sample = json.loads(records[0])
-    if sample.get("schema") != "sputniktorch.mnist.sample.v1" or not sample.get("epochs"):
+    if sample.get("schema") != "torch.mnist.sample.v1" or not sample.get("epochs"):
         raise ValueError("Invalid MNIST sample schema or empty epochs")
     sample["wall_seconds"] = wall
     # Includes imports, VM manifest/cache checks, loading, result printing and teardown.
@@ -300,8 +300,8 @@ def main():
         env.pop(key, None)
     sources = source_hashes()
     build_stamp = ROOT / "build/mnist-benchmark-build.json"
-    native = ROOT / "build/sputnik/sputniktorch.mnist_benchmark"
-    manifest = ROOT / "build/sputniktorch.mnist_benchmark.build.json"
+    native = ROOT / "build/sputnik/torch.mnist_benchmark"
+    manifest = ROOT / "build/torch.mnist_benchmark.build.json"
     compiler_hash = sha256(sputnik)
     if args.skip_build:
         stamp = json.loads(build_stamp.read_text())
@@ -346,7 +346,7 @@ def main():
         raise ValueError("Python PyTorch version differs from LibTorch")
     if args.device == "mps" and not python_environment["mps_available"]:
         raise ValueError("MPS unavailable; run with Metal access or select --device cpu")
-    envelope = dict(schema="sputniktorch.mnist.benchmark.v1", created_at=datetime.now(timezone.utc).isoformat(),
+    envelope = dict(schema="torch.mnist.benchmark.v1", created_at=datetime.now(timezone.utc).isoformat(),
                     config=config, host=dict(platform=platform.platform(), machine=platform.machine(),
                                              processor=processor, cpu_count=os.cpu_count(),
                                              torch_version=lock["torch_version"]),

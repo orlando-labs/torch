@@ -1,4 +1,4 @@
-package sputniktorch.optim.lr_scheduler.cosine_annealing_lr
+package torch.optim.lr_scheduler.cosine_annealing_lr
 
 export CosineAnnealingLR
 

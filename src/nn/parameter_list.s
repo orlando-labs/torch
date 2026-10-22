@@ -1,6 +1,6 @@
-package sputniktorch.nn.parameter_list
+package torch.nn.parameter_list
 
-from sputniktorch.nn.module import Module
+from torch.nn.module import Module
 
 export ParameterList
 

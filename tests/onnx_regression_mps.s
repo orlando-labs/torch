@@ -1,6 +1,6 @@
-package sputniktorch.onnx_regression_mps_test
+package torch.onnx_regression_mps_test
 
-from sputniktorch.onnx_regression_test import run
+from torch.onnx_regression_test import run
 
 export main
 

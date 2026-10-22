@@ -1,9 +1,9 @@
-package sputniktorch.modular_imports_test
+package torch.modular_imports_test
 
-from sputniktorch.nn import Linear, Sequential, ReLU
-from sputniktorch.optim import SGD
-from sputniktorch.tensor.factories import tensor
-from sputniktorch.checks import check
+from torch.nn import Linear, Sequential, ReLU
+from torch.optim import SGD
+from torch.tensor.factories import tensor
+from torch.checks import check
 
 export main
 

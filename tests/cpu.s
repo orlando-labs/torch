@@ -1,6 +1,6 @@
-package sputniktorch.cpu_test
+package torch.cpu_test
 
-from sputniktorch.checks import run
+from torch.checks import run
 
 export main
 def main(): run("cpu")

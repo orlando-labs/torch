@@ -1,12 +1,12 @@
 #include "group.h"
 #include <sstream>
 #include <unordered_set>
-using namespace sputniktorch;
+using namespace sputnik_torch;
 #ifdef USE_C10D_GLOO
 namespace {
 void wait(GroupCore &g, c10::intrusive_ptr<c10d::Work> work) {
   try {
-    require(work->wait(g.timeout), "Sputniktorch.Errors.DistributedError",
+    require(work->wait(g.timeout), "Torch.Errors.DistributedError",
             "DDP collective timed out");
   } catch (...) {
     g.failed = true;
@@ -26,7 +26,7 @@ void validate_schema(GroupCore &g, const std::string &schema) {
   auto length = at::full({1}, root ? int64_t(schema.size()) : 0, at::kLong);
   broadcast(g, length);
   const auto n = length.item<int64_t>();
-  require(n >= 0 && n <= 1024 * 1024, "Sputniktorch.Errors.DistributedError",
+  require(n >= 0 && n <= 1024 * 1024, "Torch.Errors.DistributedError",
           "DDP schema exceeds 1 MiB");
   auto bytes = at::zeros({n}, at::kByte);
   if (root && n)
@@ -35,7 +35,7 @@ void validate_schema(GroupCore &g, const std::string &schema) {
   std::string reference(static_cast<char *>(bytes.data_ptr()), n);
   auto mismatch = at::full({1}, schema == reference ? 0 : 1, at::kLong);
   sum(g, mismatch);
-  require(mismatch.item<int64_t>() == 0, "Sputniktorch.Errors.DistributedError",
+  require(mismatch.item<int64_t>() == 0, "Torch.Errors.DistributedError",
           "DDP parameter schemas differ across ranks");
 }
 } // namespace
@@ -49,7 +49,7 @@ extern "C" SputnikStatus amt_ddp_parameters(SputnikCtx *cx, const SputnikValue *
     if (!sputnik_handle_ptr(cx, a[0], group_tag, &raw))
       throw FaultPending{};
     auto &g = *static_cast<GroupCore *>(raw);
-    require(!g.failed, "Sputniktorch.Errors.DistributedError", "process group has failed");
+    require(!g.failed, "Torch.Errors.DistributedError", "process group has failed");
     require(sputnik_is_list(cx, a[1]), "TypeError", "expected named parameter entries");
     const auto op = string(cx, a[2]);
     require(op == "sync" || op == "reduce", "ArgumentError", "invalid DDP operation");
@@ -66,7 +66,7 @@ extern "C" SputnikStatus amt_ddp_parameters(SputnikCtx *cx, const SputnikValue *
       auto &p = c.tensor;
       require(p.device().is_cpu() && p.is_leaf() && p.is_contiguous() &&
                   p.layout() == at::kStrided && p.is_floating_point(),
-              "Sputniktorch.Errors.DistributedError",
+              "Torch.Errors.DistributedError",
               "DDP requires contiguous dense floating CPU leaf parameters");
       if (!seen.insert(p.unsafeGetTensorImpl()).second)
         continue;
@@ -74,7 +74,7 @@ extern "C" SputnikStatus amt_ddp_parameters(SputnikCtx *cx, const SputnikValue *
              << p.requires_grad() << ';';
       parameters.push_back(p);
     }
-    require(schema.str().size() <= 1024 * 1024, "Sputniktorch.Errors.DistributedError",
+    require(schema.str().size() <= 1024 * 1024, "Torch.Errors.DistributedError",
             "DDP schema exceeds 1 MiB");
     validate_schema(g, schema.str());
     at::NoGradGuard guard;
@@ -103,7 +103,7 @@ extern "C" SputnikStatus amt_ddp_parameters(SputnikCtx *cx, const SputnikValue *
     }
     *out = sputnik_make_null(cx);
 #else
-    throw Error("Sputniktorch.Errors.DistributedError", "Gloo is unavailable");
+    throw Error("Torch.Errors.DistributedError", "Gloo is unavailable");
 #endif
   });
 }

@@ -1,4 +1,4 @@
-package sputniktorch.optim.lr_scheduler.reduce_lr_on_plateau
+package torch.optim.lr_scheduler.reduce_lr_on_plateau
 
 export ReduceLROnPlateau
 

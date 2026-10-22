@@ -1,7 +1,7 @@
-package sputniktorch.nn.tanh
+package torch.nn.tanh
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import tanh
+from torch.nn.module import Module
+from torch.nn.functional import tanh
 
 export Tanh
 

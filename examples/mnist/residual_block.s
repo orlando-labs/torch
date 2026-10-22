@@ -1,6 +1,6 @@
-package sputniktorch.mnist.residual_block
+package torch.mnist.residual_block
 
-from sputniktorch.nn import Module, Conv2d, BatchNorm2d, ReLU, Sequential, Identity
+from torch.nn import Module, Conv2d, BatchNorm2d, ReLU, Sequential, Identity
 
 export ResidualBlock
 

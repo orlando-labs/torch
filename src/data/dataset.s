@@ -1,4 +1,4 @@
-package sputniktorch.data.dataset
+package torch.data.dataset
 
 export Dataset
 

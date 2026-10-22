@@ -1,4 +1,4 @@
-package sputniktorch.mnist.benchmark_options
+package torch.mnist.benchmark_options
 
 export BenchmarkOptions
 

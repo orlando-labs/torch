@@ -1,19 +1,19 @@
-package sputniktorch.distributed_errors_test
+package torch.distributed_errors_test
 
-import sputniktorch
-from sputniktorch.checks import check
+import torch
+from torch.checks import check
 
 export main
 
 def main():
-  group = sputniktorch.group_from_env(timeout_ms: 2000)
+  group = torch.group_from_env(timeout_ms: 2000)
   try:
-    model = sputniktorch.Linear(1, group.rank + 1, seed: 7)
-    ddp = sputniktorch.DDP(model, group)
+    model = torch.Linear(1, group.rank + 1, seed: 7)
+    ddp = torch.DDP(model, group)
     mismatch = false
     try:
       ddp.synchronize!
-    rescue Sputniktorch.Errors.DistributedError |e|:
+    rescue Torch.Errors.DistributedError |e|:
       mismatch = true
     check(mismatch, "DDP schema mismatch must be detected on every rank")
     group.barrier!

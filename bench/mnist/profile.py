@@ -76,8 +76,8 @@ def main():
         env["AMT_BOUNDARY_PROFILE"] = "1"
     sputnik = ROOT.parent / "sputnik-lang/build/sputnik"
     name = "mnist_atoms" if args.atoms else "mnist_benchmark"
-    manifest = ROOT / f"build/sputniktorch.{name}.build.json"
-    native = ROOT / f"build/sputnik/sputniktorch.{name}"
+    manifest = ROOT / f"build/torch.{name}.build.json"
+    native = ROOT / f"build/sputnik/torch.{name}"
     common = ["--data", str(args.data.resolve()), "--device", args.device]
     if not args.atoms:
         common += ["--epochs", str(args.epochs), "--batch-size", "32",

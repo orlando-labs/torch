@@ -1,6 +1,6 @@
-package sputniktorch.onnx.program
+package torch.onnx.program
 
-from sputniktorch.onnx.core import save_program
+from torch.onnx.core import save_program
 
 export Program
 

@@ -1,7 +1,7 @@
-package sputniktorch.nn.elu
+package torch.nn.elu
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import elu
+from torch.nn.module import Module
+from torch.nn.functional import elu
 
 export ELU
 

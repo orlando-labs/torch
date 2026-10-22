@@ -57,7 +57,7 @@ runtime. Два непересекающихся поддерева внутри
 
 Связь с исходником: `Dataset.batch → tensor(indices, dtype: "int64")`.
 Пропущенные `device: "cpu"` и `requires_grad: false` представлены default
-thunks. Disassembly `sputniktorch.tensor.factories.sputnikbc` показывает, что эти
+thunks. Disassembly `torch.tensor.factories.sputnikbc` показывает, что эти
 thunks содержат только load literal, close upvalues, return, но наследуют
 capture layout всей функции, включая импорты, используемые только в её теле.
 Проверка `capture_layout.empty()` ошибочно запрещала быстрый путь для литерала.
@@ -359,7 +359,7 @@ VM/Python. Эти цифры локализуют следующую работ�
 ## Воспроизведение
 
 Python используется только для опционального сравнения и анализа. Пакет,
-сборка и тесты Sputniktorch его не требуют.
+сборка и тесты Torch его не требуют.
 
 ```sh
 ./tools/build bench/mnist/atoms.s
@@ -376,15 +376,15 @@ Python используется только для опционального �
 
 # Isolated Sputnik stack. Build full native too if comparing its executable.
 ./tools/build bench/mnist/hotspot.s
-../sputnik-lang/build/sputnik run build/sputniktorch.mnist_hotspot.build.json \
+../sputnik-lang/build/sputnik run build/torch.mnist_hotspot.build.json \
   --grant ffi --grant fs.read -- --case forward --device mps --iterations 20000
 # In another terminal: sample <pid> 6 1 -file /tmp/mnist-forward.sample.txt
 # The same driver: --case array or --case epoch --device cpu.
 
 # CPU/MPS materialization validation, independent of Python.
 ./tools/build tests/materialization.s
-./build/sputnik/sputniktorch.materialization_test
-PYTORCH_ENABLE_MPS_FALLBACK=0 ./build/sputnik/sputniktorch.materialization_test --device mps
+./build/sputnik/torch.materialization_test
+PYTORCH_ENABLE_MPS_FALLBACK=0 ./build/sputnik/torch.materialization_test --device mps
 
 # Uninstrumented, numerically checked three-lane throughput.
 /opt/homebrew/bin/python3 bench/mnist/run.py --device mps --epochs 3 \

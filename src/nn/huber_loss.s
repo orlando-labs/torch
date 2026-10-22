@@ -1,7 +1,7 @@
-package sputniktorch.nn.huber_loss
+package torch.nn.huber_loss
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import huber_loss
+from torch.nn.module import Module
+from torch.nn.functional import huber_loss
 
 export HuberLoss
 

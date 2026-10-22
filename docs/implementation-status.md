@@ -26,7 +26,7 @@
 | Placement | CPU default; `map_location: "mps"` или Map tag→device; проверка всех destinations до materialization |
 | Distributed | CPU Gloo/FileStore, SUM all-reduce, broadcast, barrier, explicit close; launcher environment |
 | DDP | Explicit synchronize!, backward! с упорядоченным reduction; проверка parameter schema на ranks, global usage vector, averaging по world size |
-| Launcher | `sputniktorch-run --nproc N [--timeout seconds] program`; отдельные процессы/группы, rank environment, timeout/failure cleanup |
+| Launcher | `torch-run --nproc N [--timeout seconds] program`; отдельные процессы/группы, rank environment, timeout/failure cleanup |
 
 ## Границы serialization
 
@@ -125,7 +125,7 @@ residual CNN: полный train/test split, DataLoader, AdamW и cosine schedul
 метрики. Короткий MNIST smoke входит в MPS suite, когда датасет подготовлен.
 Логи: `build/full-suite-mnist.log` и заключительный
 `build/full-suite-mnist-resumed.log` с повтором affected CPU/VM checks после
-исправления bare native destructor и итоговым `PASS sputniktorch test suite`.
+исправления bare native destructor и итоговым `PASS torch test suite`.
 Сборка требует `--require-full-native`: тела функций, entry и runtime path
 не допускают bytecode fallback. ABI/lifecycle, emitter и graph linker
 regression tests Sputnik также прошли.

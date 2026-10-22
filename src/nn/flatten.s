@@ -1,6 +1,6 @@
-package sputniktorch.nn.flatten
+package torch.nn.flatten
 
-from sputniktorch.nn.module import Module
+from torch.nn.module import Module
 
 export Flatten
 

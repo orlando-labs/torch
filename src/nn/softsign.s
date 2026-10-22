@@ -1,7 +1,7 @@
-package sputniktorch.nn.softsign
+package torch.nn.softsign
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import softsign
+from torch.nn.module import Module
+from torch.nn.functional import softsign
 
 export Softsign
 

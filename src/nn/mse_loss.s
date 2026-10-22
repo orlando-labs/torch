@@ -1,7 +1,7 @@
-package sputniktorch.nn.mse_loss
+package torch.nn.mse_loss
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import mse_loss
+from torch.nn.module import Module
+from torch.nn.functional import mse_loss
 
 export MSELoss
 

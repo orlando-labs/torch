@@ -1,7 +1,7 @@
-package sputniktorch.nn.cross_entropy_loss
+package torch.nn.cross_entropy_loss
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import cross_entropy
+from torch.nn.module import Module
+from torch.nn.functional import cross_entropy
 
 export CrossEntropyLoss
 

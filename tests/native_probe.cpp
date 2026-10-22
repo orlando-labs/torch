@@ -1,11 +1,11 @@
 #include <iostream>
 #include <stdexcept>
 #include <torch/mps.h>
-#include <torch/torch.h>
+#include "bridge.h"
 
 int main(int argc, char **argv) {
   try {
-    const auto device = torch::Device(argc > 1 ? argv[1] : "cpu");
+    const auto device = sputnik_torch::tensor_device(argc > 1 ? argv[1] : "cpu");
     if (device.is_mps() && !torch::mps::is_available())
       throw std::runtime_error("MPS is not available to this process");
     auto x =
@@ -23,8 +23,7 @@ int main(int argc, char **argv) {
       w.mutable_grad() = torch::Tensor();
     }
     TORCH_CHECK(std::abs(w.item<float>() - 3.f) < 1e-4);
-    if (device.is_mps())
-      torch::mps::synchronize();
+    sputnik_torch::synchronize_devices();
     std::cout << "PASS " << device
               << " forward=14 gradient=[2,4,6] trained_weight=" << w.item<float>() << '\n';
     return 0;

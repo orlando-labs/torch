@@ -1,7 +1,7 @@
-package sputniktorch.nn.relu6
+package torch.nn.relu6
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import kernel, spatial
+from torch.nn.module import Module
+from torch.nn.functional import kernel, spatial
 
 export ReLU6
 

@@ -1,7 +1,7 @@
-package sputniktorch.optim.sgd
+package torch.optim.sgd
 
-from sputniktorch.optim.optimizer import Optimizer, validate_coefficients
-from sputniktorch.autograd import no_grad
+from torch.optim.optimizer import Optimizer, validate_coefficients
+from torch.autograd import no_grad
 
 export SGD
 

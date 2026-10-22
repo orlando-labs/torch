@@ -10,12 +10,12 @@ Ninja 1.13.2, Homebrew pytorch 2.14.0_1. CPU и MPS C++ forward/backward
 ## 2. Готовый LibTorch вместо собственного source build
 
 Используется `brew --prefix pytorch` либо явно указанный `LIBTORCH_PREFIX`.
-Сборка sputniktorch использует shell/CMake/C++ и никогда не запускает Python,
+Сборка torch использует shell/CMake/C++ и никогда не запускает Python,
 `torchgen`, pip или upstream скрипты сборки. Upstream build dependencies
 не становятся зависимостями самого пакета.
 
 Homebrew-формула отдельно устанавливает Python и другие компоненты своего
-пакета; sputniktorch потребляет исключительно C++ headers и shared libraries.
+пакета; torch потребляет исключительно C++ headers и shared libraries.
 Для полностью независимой от Homebrew установки можно передать готовый
 LibTorch prefix той же версии, прошедший наши probes.
 

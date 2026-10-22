@@ -1,6 +1,6 @@
 # Sputnik как основной язык пакета
 
-Каждый публичный NN-класс имеет отдельный `.s` файл. `sputniktorch.s`,
+Каждый публичный NN-класс имеет отдельный `.s` файл. `torch.s`,
 `nn.s`, `optim.s`, `data.s`, `autograd.s` и scheduler facade только
 импортируют и реэкспортируют имена. Native handles и C ABI — детали границы.
 

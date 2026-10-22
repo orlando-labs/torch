@@ -1,16 +1,17 @@
-package sputniktorch.tensor.core
+package torch.tensor.core
 
-from sputniktorch.errors import Error
-from sputniktorch.autograd.context import execution_mode
+from torch.errors import Error
+from torch.autograd.context import execution_mode
 
 export TensorCore, make, factory, meta, binary, unary, transfer, mutate!, backward!
 
-native class TensorCore from "sputniktorch.TensorCore" collected:
+native class TensorCore from "torch.TensorCore" collected:
   def destroy!() from "amt_tensor_free"
   def shape() from "amt_tensor_shape"
   def strides() from "amt_tensor_strides"
   def rank() from "amt_tensor_rank"
   def numel() from "amt_tensor_numel"
+  def relu(mode as Int) from "amt_tensor_relu"
   def dtype() from "amt_tensor_dtype"
   def device() from "amt_tensor_device"
   def requires_grad?() from "amt_tensor_requires_grad"
@@ -26,10 +27,10 @@ native def _factory_tensor(op as Str, shape, dtype as Str, device as Str,
   requires_grad as Bool, options, mode as Int) from "amt_factory"
 
 native def _meta(core, key as Str, mode as Int) from "amt_meta"
-native def _materialize(core, key as Str, mode as Int) from "amt_materialize"
+native def _materialize(core, key as Str, mode as Int) from "amt_materialize" blocking
 native def _binary(core, other, op as Str, mode as Int) from "amt_binary"
 native def _unary(core, op as Str, args, mode as Int) from "amt_unary"
-native def _transfer(core, device as Str, dtype as Str, mode as Int) from "amt_to"
+native def _transfer(core, device as Str, dtype as Str, mode as Int) from "amt_to" blocking
 native def _mutate!(core, op as Str, value, mode as Int) from "amt_mutate"
 native def _backward!(core, gradient, retain_graph as Bool, create_graph as Bool, mode as Int) from "amt_backward"
 

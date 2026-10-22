@@ -1,26 +1,29 @@
-package sputniktorch.nn.dropout
+package torch.nn.dropout
 
-from sputniktorch.nn.module import Module
-from sputniktorch.random.generator import Generator
+from torch.nn.module import Module
+from torch.random.generator import Generator
+from torch.nn.dropout_functional import apply_dropout, sample_dropout!, validate_probability
 
 export Dropout
 
 class Dropout < Module:
-  def init(@p: 0.5, seed: 0):
+  def init(p: 0.5, seed: 0): _initialize_dropout!(p, seed, :element)
+
+  def _initialize_dropout!(p, seed, kind):
     _initialize_registry!
-    raise ValueError("dropout p must be in 0..1") if p < 0 or p > 1
+    validate_probability(p)
+    @p = p
+    @kind = kind
     @rng = Generator(seed:)
 
   def stateful?(): training? and @p > 0 and @p < 1
 
   def forward(x):
     raise ValueError("training dropout consumes RNG; use call! or eval!") if stateful?
-    if training? and @p == 1 then x * 0 else x
+    apply_dropout(x, @p, training?, @kind)
 
   def forward!(x):
-    return forward(x) unless stateful?
-    mask = @rng.rand!(x.shape, device: x.device).ge(@p)
-    x * mask / (1 - @p)
+    sample_dropout!(x, @rng, @p, training?, @kind)
 
   def rng_state(): @rng.state
 

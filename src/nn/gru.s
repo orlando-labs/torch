@@ -1,9 +1,11 @@
-package sputniktorch.nn.gru
+package torch.nn.gru
 
-from sputniktorch.nn.recurrent import Recurrent
+from torch.nn.recurrent import Recurrent
 
 export GRU
 
 class GRU < Recurrent:
-  def init(input_size, hidden_size, num_layers: 1, seed: 0, device: "cpu"):
-    _initialize_recurrent!("gru", input_size, hidden_size, num_layers, :tanh, seed, device)
+  def init(input_size, hidden_size, num_layers: 1, bias: true, batch_first: true,
+      dropout: 0.0, bidirectional: false, seed: 0, device: "cpu", dtype: "float32"):
+    _initialize_recurrent!("gru", input_size, hidden_size, num_layers, :tanh,
+      bias, batch_first, dropout, bidirectional, 0, seed, device, dtype)

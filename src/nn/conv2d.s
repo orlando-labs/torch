@@ -1,6 +1,6 @@
-package sputniktorch.nn.conv2d
+package torch.nn.conv2d
 
-from sputniktorch.nn.convolution import Convolution
+from torch.nn.convolution import Convolution
 
 export Conv2d
 

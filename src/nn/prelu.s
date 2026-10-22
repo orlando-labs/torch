@@ -1,8 +1,8 @@
-package sputniktorch.nn.prelu
+package torch.nn.prelu
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import kernel
-from sputniktorch.tensor.factories import ones
+from torch.nn.module import Module
+from torch.nn.functional import kernel
+from torch.tensor.factories import ones
 
 export PReLU
 

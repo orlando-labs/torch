@@ -1,7 +1,7 @@
-package sputniktorch.mnist.training
+package torch.mnist.training
 
-import sputniktorch
-from sputniktorch.backends import execution_batch
+import torch
+from torch.backends import execution_batch
 
 export train_epoch, evaluate
 
@@ -41,7 +41,7 @@ def evaluate(model, batches, loss_fn, device:):
 
 def _evaluate(model, batches, loss_fn, device:):
   model.eval!
-  sputniktorch.no_grad:
+  torch.no_grad:
     total_loss = 0.0
     correct = 0
     seen = 0

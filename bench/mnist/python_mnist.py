@@ -319,7 +319,7 @@ def main():
     restore_eval_seconds = time.perf_counter() - phase
     if abs(loss - epochs[-1]["test_loss"]) > 1e-7 or accuracy != epochs[-1]["accuracy"]:
         raise RuntimeError("checkpoint changed test metrics")
-    result = dict(schema="sputniktorch.mnist.sample.v1", device=args.device, version=torch.__version__,
+    result = dict(schema="torch.mnist.sample.v1", device=args.device, version=torch.__version__,
                   threads=torch.get_num_threads(), interop_threads=torch.get_num_interop_threads(),
                   train_count=train[1].numel(), test_count=test[1].numel(), parameters=parameters,
                   batch_size=args.batch_size, seed=args.seed, optimizer=args.optimizer, profiled=args.profile,

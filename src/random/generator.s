@@ -1,8 +1,8 @@
-package sputniktorch.random.generator
+package torch.random.generator
 
-from sputniktorch.random.core import make as _make, sample! as _sample!
-from sputniktorch.tensor.value import Tensor
-from sputniktorch.device import device_text
+from torch.random.core import make as _make, sample! as _sample!
+from torch.tensor.value import Tensor
+from torch.device import device_text
 
 export Generator
 

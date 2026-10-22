@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
       auto value = torch::pickle_load(bytes).toGenericDict();
       auto weight = value.at("weight").toTensor();
       TORCH_CHECK(weight.numel() == 6 && weight.sum().item<float>() == 21.f);
-      std::cout << "PASS LibTorch reads sputniktorch state dict\n";
+      std::cout << "PASS LibTorch reads sputnik_torch state dict\n";
       return 0;
     }
     TORCH_CHECK(argc == 2, "usage: checkpoint_fixtures directory | verify file");

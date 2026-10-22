@@ -1,10 +1,10 @@
-package sputniktorch.onnx_error_model
+package torch.onnx_error_model
 
-import sputniktorch
-from sputniktorch.nn import Module, Identity
-from sputniktorch.nn.functional import kernel
-from sputniktorch.autograd import grad
-from sputniktorch.onnx import export_model
+import torch
+from torch.nn import Module, Identity
+from torch.nn.functional import kernel
+from torch.autograd import grad
+from torch.onnx import export_model
 
 export ErrorModel
 
@@ -13,7 +13,7 @@ class ErrorModel < Module:
     _initialize_registry!
     @identity = Identity()
     @identity.eval!
-    @weight = sputniktorch.ones([1], requires_grad: true)
+    @weight = torch.ones([1], requires_grad: true)
     register_parameter!("weight", @weight)
     @saved = state_dict
 

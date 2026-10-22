@@ -1,6 +1,6 @@
-package sputniktorch.mnist.idx
+package torch.mnist.idx
 
-from sputniktorch import from_bytes
+from torch import from_bytes
 
 export read_idx
 

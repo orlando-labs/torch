@@ -1,6 +1,6 @@
-package sputniktorch.direct_tensor_import_test
+package torch.direct_tensor_import_test
 
-from sputniktorch.tensor.factories import tensor
+from torch.tensor.factories import tensor
 
 export main
 
@@ -8,7 +8,7 @@ def main():
   caught = false
   try:
     tensor([[1], [2, 3]])
-  rescue Sputniktorch.Errors.ShapeError |error|:
+  rescue Torch.Errors.ShapeError |error|:
     caught = true
   if not caught:
     raise ValueError("direct tensor import must register native errors")

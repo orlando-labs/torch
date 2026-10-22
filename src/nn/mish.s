@@ -1,7 +1,7 @@
-package sputniktorch.nn.mish
+package torch.nn.mish
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import mish
+from torch.nn.module import Module
+from torch.nn.functional import mish
 
 export Mish
 

@@ -1,6 +1,6 @@
-package sputniktorch.tensor.foreach
+package torch.tensor.foreach
 
-from sputniktorch.autograd.context import execution_mode
+from torch.autograd.context import execution_mode
 
 # Internal TensorCore-list boundary. Algorithms and per-parameter state stay
 # in Sputnik; ATen supplies only generic list tensor primitives.

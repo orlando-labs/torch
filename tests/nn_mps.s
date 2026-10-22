@@ -1,7 +1,7 @@
-package sputniktorch.nn_mps_test
+package torch.nn_mps_test
 
-from sputniktorch.nn_catalog_test import run
-from sputniktorch.auto_registration_test import run as run_auto_registration
+from torch.nn_catalog_test import run
+from torch.auto_registration_test import run as run_auto_registration
 
 export main
 

@@ -1,6 +1,6 @@
-package sputniktorch.onnx.trace
+package torch.onnx.trace
 
-from sputniktorch.onnx.core import open_trace, trace_token, finish_trace!
+from torch.onnx.core import open_trace, trace_token, finish_trace!
 
 export Trace
 

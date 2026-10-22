@@ -1,7 +1,7 @@
-package sputniktorch.nn.gelu
+package torch.nn.gelu
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import gelu
+from torch.nn.module import Module
+from torch.nn.functional import gelu
 
 export GELU
 

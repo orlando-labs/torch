@@ -1,7 +1,7 @@
-package sputniktorch.nn.bce_with_logits_loss
+package torch.nn.bce_with_logits_loss
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import binary_cross_entropy_with_logits
+from torch.nn.module import Module
+from torch.nn.functional import binary_cross_entropy_with_logits
 
 export BCEWithLogitsLoss
 

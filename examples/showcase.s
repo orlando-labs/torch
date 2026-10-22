@@ -1,14 +1,14 @@
-package sputniktorch.showcase
+package torch.showcase
 
-import sputniktorch
-from sputniktorch.nn import CrossEntropyLoss
-from sputniktorch.optim import AdamW
-from sputniktorch.optim.lr_scheduler import CosineAnnealingLR
-from sputniktorch.data import DataLoader
-from sputniktorch.mnist.dataset import MNIST
-from sputniktorch.mnist.network import SmallResNet
-from sputniktorch.mnist.options import Options
-from sputniktorch.mnist.training import train_epoch, evaluate
+import torch
+from torch.nn import CrossEntropyLoss
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.data import DataLoader
+from torch.mnist.dataset import MNIST
+from torch.mnist.network import SmallResNet
+from torch.mnist.options import Options
+from torch.mnist.training import train_epoch, evaluate
 
 export main
 
@@ -39,9 +39,9 @@ def main():
       " | accuracy #{accuracy * 100}% | #{seconds}s")
     schedule.step!
 
-  sputniktorch.save(model.state_dict, options.checkpoint)
+  torch.save(model.state_dict, options.checkpoint)
   restored = SmallResNet(seed: options.seed, device:)
-  restored.load_state_dict!(sputniktorch.load(options.checkpoint, map_location: device))
+  restored.load_state_dict!(torch.load(options.checkpoint, map_location: device))
   (loss, accuracy) = evaluate(restored, test_batches, loss_fn, device:)
   changed = (loss - final_metrics[0]).abs > 1e-7 or accuracy != final_metrics[1]
   raise ValueError("checkpoint changed test metrics") if changed

@@ -3,7 +3,7 @@
 #include <numeric>
 #include <unordered_map>
 
-namespace sputniktorch::onnx_export {
+namespace sputnik_torch::onnx_export {
 bool Lowering::lower_tensor(Node *source) {
   const std::string name = source->kind().toQualString();
   auto arg = [&](size_t i) { return source->input(i); };

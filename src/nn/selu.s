@@ -1,7 +1,7 @@
-package sputniktorch.nn.selu
+package torch.nn.selu
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import selu
+from torch.nn.module import Module
+from torch.nn.functional import selu
 
 export SELU
 

@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+exec cmake "-DROOT=$root" "-DSPUTNIK_ROOT=${SPUTNIK_ROOT:-$root/../sputnik-lang}" \
+  "-DPACKAGES=${1:-$root/build/packages}" -P "$root/cmake/VerifyPackages.cmake"

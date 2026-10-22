@@ -1,6 +1,6 @@
-package sputniktorch.optim.adamw
+package torch.optim.adamw
 
-from sputniktorch.optim.adam import Adam
+from torch.optim.adam import Adam
 
 export AdamW
 

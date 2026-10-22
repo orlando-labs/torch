@@ -10,11 +10,11 @@
 // Non-executing protocol-2/4 parser for a flat state_dict. GLOBAL and REDUCE
 // are data tokens handled by this allowlist, never passed to a Python/JIT VM.
 namespace {
-using namespace sputniktorch;
+using namespace sputnik_torch;
 constexpr size_t max_pickle = 16 * 1024 * 1024, max_nodes = 1000000, max_records = 100000;
 constexpr uint64_t max_bytes = 2ULL * 1024 * 1024 * 1024;
 void valid(bool yes, const std::string &why) {
-  require(yes, "Sputniktorch.Errors.CheckpointError", why);
+  require(yes, "Torch.Errors.CheckpointError", why);
 }
 at::ScalarType storage_type(const std::string &s) {
   static const std::unordered_map<std::string, at::ScalarType> types = {
@@ -50,7 +50,7 @@ std::string storage_name(at::ScalarType t) {
   case at::kBool:
     return "BoolStorage";
   default:
-    throw Error("Sputniktorch.Errors.CheckpointError", "unsupported checkpoint dtype");
+    throw Error("Torch.Errors.CheckpointError", "unsupported checkpoint dtype");
   }
 }
 struct Node {
@@ -309,11 +309,11 @@ struct Parser {
         break;
       }
       default:
-        throw Error("Sputniktorch.Errors.CheckpointError",
+        throw Error("Torch.Errors.CheckpointError",
                     "unsupported pickle opcode " + std::to_string(op));
       }
     }
-    throw Error("Sputniktorch.Errors.CheckpointError", "missing pickle STOP");
+    throw Error("Torch.Errors.CheckpointError", "missing pickle STOP");
   }
   void validate_metadata(size_t id, size_t depth = 0) {
     valid(++metadata_visits <= max_nodes, "metadata traversal limit");
@@ -354,13 +354,11 @@ std::string read(caffe2::serialize::PyTorchStreamReader &r, const std::string &n
   return std::string(static_cast<char *>(data.get()), size);
 }
 at::Device target(const std::string &name) {
-  valid(name == "cpu" || name == "cpu:0" || name == "mps" || name == "mps:0",
-        "unsupported checkpoint destination: " + name);
-  if (name.starts_with("mps")) {
-    valid(torch::mps::is_available(), "MPS unavailable");
-    return at::Device(at::kMPS);
+  try {
+    return tensor_device(name);
+  } catch (const std::exception &error) {
+    throw Error("Torch.Errors.CheckpointError", error.what());
   }
-  return at::Device(at::kCPU);
 }
 std::string mapping(SputnikCtx *cx, SputnikValue value, const std::string &source) {
   if (sputnik_is_str(cx, value))

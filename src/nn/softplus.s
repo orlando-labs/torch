@@ -1,7 +1,7 @@
-package sputniktorch.nn.softplus
+package torch.nn.softplus
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import softplus
+from torch.nn.module import Module
+from torch.nn.functional import softplus
 
 export Softplus
 

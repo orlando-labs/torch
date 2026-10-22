@@ -1,13 +1,13 @@
-package sputniktorch.serialization.state_dict
+package torch.serialization.state_dict
 
-from sputniktorch.errors import Error
-from sputniktorch.tensor.value import Tensor
-from sputniktorch.device import device_text
+from torch.errors import Error
+from torch.tensor.value import Tensor
+from torch.device import device_text
 
 export load, save
 
-native def _load(path, map_location) from "amt_load"
-native def _save(entries, path) from "amt_save"
+native def _load(path, map_location) from "amt_load" blocking
+native def _save(entries, path) from "amt_save" blocking
 
 def load(path, map_location: "cpu"):
   location = map_location

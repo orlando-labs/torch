@@ -2,14 +2,17 @@
 
 import argparse
 import copy
+import contextlib
+import io
 import json
 import unittest
 
 import run
+import compare_calls
 
 
 def sample(lane="python"):
-    return dict(schema="sputniktorch.mnist.sample.v1", lane=lane, device="cpu", version="2.14.0",
+    return dict(schema="torch.mnist.sample.v1", lane=lane, device="cpu", version="2.14.0",
                 threads=4, interop_threads=10, train_count=64, test_count=32, parameters=19706,
                 execution_scope=None if lane == "python" else "run",
                 batch_size=16, seed=7, optimizer="matched", profiled=False, data_seconds=0.1,
@@ -112,6 +115,31 @@ class AcceptanceTests(unittest.TestCase):
         self.assertFalse(run.check_python_speed(values, 1.05)["passed"])
         values[0]["loop_seconds"] = 1.0
         self.assertFalse(run.check_python_speed(values, 1.0)["passed"])
+
+
+class CompareCallsTests(unittest.TestCase):
+    common = ["--device", "cpu", "--python", "/optional/python", "--output", "/tmp/ab"]
+
+    def test_vm_only_comparison_accepts_batch_workload(self):
+        args = compare_calls.parse_args(self.common + ["--before-vm", "/tmp/vm", "--batch-size", "128"])
+        self.assertIsNone(args.before_native)
+        self.assertEqual(args.batch_size, 128)
+        self.assertEqual(args.execution_scope, "run")
+
+    def test_saved_native_requires_its_matching_provenance_argument(self):
+        for extra in (["--before-native", "/tmp/native"],
+                      ["--before-vm", "/tmp/vm", "--before-build-log", "/tmp/log"]):
+            with self.subTest(extra=extra), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as error:
+                    compare_calls.parse_args(self.common + extra)
+                self.assertEqual(error.exception.code, 2)
+
+    def test_rejects_missing_baseline_and_invalid_batch(self):
+        for extra in ([], ["--before-vm", "/tmp/vm", "--batch-size", "0"]):
+            with self.subTest(extra=extra), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as error:
+                    compare_calls.parse_args(self.common + extra)
+                self.assertEqual(error.exception.code, 2)
 
 
 if __name__ == "__main__":

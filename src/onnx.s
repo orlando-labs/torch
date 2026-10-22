@@ -1,7 +1,7 @@
-package sputniktorch.onnx
+package torch.onnx
 
-from sputniktorch.onnx.exporter import export_model
-from sputniktorch.onnx.program import Program
-from sputniktorch.errors import ONNXError
+from torch.onnx.exporter import export_model
+from torch.onnx.program import Program
+from torch.errors import ONNXError
 
 export export_model, Program, ONNXError

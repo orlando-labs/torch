@@ -2,7 +2,7 @@
 
 > Целевой проект. Текущая реализация и ограничения: [implementation-status.md](implementation-status.md).
 
-Serialization — часть ядра sputniktorch. Она не зависит от инициализации
+Serialization — часть ядра torch. Она не зависит от инициализации
 distributed и работает в процессе, где CUDA/Gloo вообще отсутствуют.
 
 ## 1. Три разные операции

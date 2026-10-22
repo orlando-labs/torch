@@ -1,0 +1,52 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+sputnik_root=${SPUTNIK_ROOT:-"$root/../sputnik-lang"}
+torch_prefix=${LIBTORCH_PREFIX:-}
+version=0.1.0-dev
+output="$root/build/packages"
+native_mode=source
+module_mode=source
+bundle=none
+matrix=OFF
+provider_spec=
+backend=
+package_ref=torch
+cuda_devices=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --matrix) matrix=ON ;;
+    --native) shift; native_mode=$1 ;;
+    --modules) shift; module_mode=$1 ;;
+    --bundle) shift; bundle=$1 ;;
+    --provider-spec) shift; provider_spec=$1 ;;
+    --backend) shift; backend=$1 ;;
+    --package-ref) shift; package_ref=$1 ;;
+    --cuda-devices) shift; cuda_devices=$1 ;;
+    --torch-prefix) shift; torch_prefix=$1 ;;
+    --sputnik-root) shift; sputnik_root=$1 ;;
+    --version) shift; version=$1 ;;
+    --out-dir) shift; output=$1 ;;
+    --help) echo 'usage: tools/package [--matrix] [--package-ref publisher/torch] [--backend cuda --cuda-devices "1;2"] [--native source|prebuilt] [--modules source|bytecode|mixed] [--bundle none|runtime|sdk] [--provider-spec FILE] [--torch-prefix DIR] [--sputnik-root DIR] [--version VERSION] [--out-dir DIR]'; exit 0 ;;
+    *) echo "unknown package option: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+if [ "$backend" = cuda ]; then
+  exec cmake "-DROOT=$root" "-DSPUTNIK_ROOT=$sputnik_root" "-DTORCH_PREFIX=$torch_prefix" \
+    "-DPACKAGE_REF=$package_ref" "-DCUDA_DEVICES=$cuda_devices" "-DMODULE_MODE=$module_mode" \
+    "-DNATIVE_MODE=$native_mode" "-DBUNDLE=$bundle" "-DMATRIX=$matrix" \
+    "-DPACKAGE_VERSION=$version" "-DOUTPUT=$output" -P "$root/cmake/PackageCuda.cmake"
+fi
+if [ -n "$backend" ]; then echo 'Only --backend cuda is supported by the Linux recipe' >&2; exit 2; fi
+case "$native_mode" in source|prebuilt) ;; *) echo 'invalid --native' >&2; exit 2 ;; esac
+case "$module_mode" in source|bytecode|mixed) ;; *) echo 'invalid --modules' >&2; exit 2 ;; esac
+case "$bundle" in none|runtime|sdk) ;; *) echo 'invalid --bundle' >&2; exit 2 ;; esac
+if [ "$matrix" = OFF ] && [ "$native_mode" = prebuilt ] && [ "$bundle" = sdk ]; then
+  echo 'SDK bundle requires a source adapter' >&2; exit 2
+fi
+
+exec cmake "-DROOT=$root" "-DSPUTNIK_ROOT=$sputnik_root" "-DTORCH_PREFIX=$torch_prefix" \
+  "-DPACKAGE_REF=$package_ref" \
+  "-DMATRIX=$matrix" "-DNATIVE_MODE=$native_mode" "-DMODULE_MODE=$module_mode" "-DBUNDLE=$bundle" "-DPROVIDER_SPEC=$provider_spec" \
+  "-DPACKAGE_VERSION=$version" "-DOUTPUT=$output" -P "$root/cmake/Package.cmake"

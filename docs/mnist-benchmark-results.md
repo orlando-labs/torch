@@ -215,7 +215,7 @@ Sputnik wrappers и количества вызовов на границе. П�
 
 ## Воспроизведение и артефакты
 
-Из корня sputniktorch, после подготовки MNIST через `./tools/fetch-mnist`:
+Из корня torch, после подготовки MNIST через `./tools/fetch-mnist`:
 
 ```sh
 PYTHON="$(brew --prefix pytorch)/libexec/bin/python"

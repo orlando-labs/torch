@@ -4,8 +4,8 @@
 #include <torch/csrc/distributed/c10d/FileStore.hpp>
 #include <torch/csrc/distributed/c10d/ProcessGroupGloo.hpp>
 #endif
-namespace sputniktorch {
-constexpr char group_tag[] = "sputniktorch.GroupCore";
+namespace sputnik_torch {
+constexpr char group_tag[] = "torch.GroupCore";
 struct GroupCore {
 #ifdef USE_C10D_GLOO
   c10::intrusive_ptr<c10d::Store> store;
@@ -14,4 +14,4 @@ struct GroupCore {
   std::chrono::milliseconds timeout{20000};
   bool failed = false;
 };
-} // namespace sputniktorch
+} // namespace sputnik_torch

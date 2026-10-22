@@ -1,7 +1,7 @@
-package sputniktorch.nn.leaky_relu
+package torch.nn.leaky_relu
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import leaky_relu
+from torch.nn.module import Module
+from torch.nn.functional import leaky_relu
 
 export LeakyReLU
 

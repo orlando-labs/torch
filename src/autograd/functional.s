@@ -1,7 +1,7 @@
-package sputniktorch.autograd.functional
+package torch.autograd.functional
 
-from sputniktorch.tensor.value import Tensor
-from sputniktorch.autograd.context import execution_mode
+from torch.tensor.value import Tensor
+from torch.autograd.context import execution_mode
 
 export grad
 

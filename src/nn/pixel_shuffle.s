@@ -1,7 +1,7 @@
-package sputniktorch.nn.pixel_shuffle
+package torch.nn.pixel_shuffle
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import kernel, spatial
+from torch.nn.module import Module
+from torch.nn.functional import kernel, spatial
 
 export PixelShuffle
 

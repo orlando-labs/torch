@@ -1,7 +1,7 @@
-package sputniktorch.nn.l1_loss
+package torch.nn.l1_loss
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import l1_loss
+from torch.nn.module import Module
+from torch.nn.functional import l1_loss
 
 export L1Loss
 

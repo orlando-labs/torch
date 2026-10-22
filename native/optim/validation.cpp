@@ -1,13 +1,19 @@
 #include "bridge.h"
 #include <cmath>
-using namespace sputniktorch;
+using namespace sputnik_torch;
 extern "C" {
 // The algorithm is an Sputnik callback. Keep its short LibTorch calls on one
 // blocking worker instead of parking the caller for every tensor operation.
 SputnikStatus amt_execution_batch(SputnikCtx *cx, const SputnikValue *a, size_t n,
                                 SputnikValue *out) {
   return boundary(cx, [&] {
-    argc_check(n, 1);
+    require(n == 1 || n == 2, "ArgumentError", "wrong number of native arguments");
+    // Grad/inference state belongs to this synchronous carrier-thread scope.
+    // Tracing stays per kernel: holding its session lock across a Sputnik
+    // callback would deadlock the next traced kernel or a child task.
+    // Retain the former one-argument thunk shape for already-built modules.
+    std::optional<ExecutionGuard> mode;
+    if (n == 2) mode.emplace(integer(cx, a[1]), false, false);
     if (sputnik_call_block(cx, a[0], nullptr, 0, out) != SPUTNIK_OK)
       throw FaultPending{};
   });
@@ -23,12 +29,12 @@ SputnikStatus amt_optimizer_validate(SputnikCtx *cx, const SputnikValue *a, size
       auto &c = core(cx, sputnik_list_at(cx, a[0], i));
       writable(c);
       auto &p = c.tensor;
-      require(p.is_leaf() && p.is_floating_point(), "Sputniktorch.Errors.AutogradError",
+      require(p.is_leaf() && p.is_floating_point(), "Torch.Errors.AutogradError",
               "optimizer requires floating leaf parameters");
       if (p.grad().defined()) {
         require(p.sizes() == p.grad().sizes() && p.device() == p.grad().device() &&
                     p.scalar_type() == p.grad().scalar_type() && p.grad().layout() == at::kStrided,
-                "Sputniktorch.Errors.AutogradError", "optimizer requires matching dense gradients");
+                "Torch.Errors.AutogradError", "optimizer requires matching dense gradients");
       }
     }
     *out = sputnik_make_null(cx);

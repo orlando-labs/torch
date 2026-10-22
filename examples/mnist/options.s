@@ -1,4 +1,4 @@
-package sputniktorch.mnist.options
+package torch.mnist.options
 
 export Options
 
@@ -13,7 +13,7 @@ class Options:
   attr test_limit
 
   def init():
-    parser = ArgParser(name: "sputniktorch MNIST", about: "Train a shallow residual CNN on MNIST")
+    parser = ArgParser(name: "torch MNIST", about: "Train a shallow residual CNN on MNIST")
     parser.arg("--data", default: "build/datasets/mnist")
     parser.arg("--checkpoint", default: "build/mnist-resnet.pt")
     parser.arg("--device", choices: ["cpu", "mps"], default: "mps")

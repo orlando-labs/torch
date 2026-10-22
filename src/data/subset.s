@@ -1,6 +1,6 @@
-package sputniktorch.data.subset
+package torch.data.subset
 
-from sputniktorch.data.dataset import Dataset
+from torch.data.dataset import Dataset
 
 export Subset
 

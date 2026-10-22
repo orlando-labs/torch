@@ -1,11 +1,11 @@
-package sputniktorch.data.data_loader
+package torch.data.data_loader
 
-from sputniktorch.data.sequential_sampler import SequentialSampler
-from sputniktorch.data.random_sampler import RandomSampler
-from sputniktorch.data.collate import default_collate
-from sputniktorch.data.iterable_dataset import IterableDataset
-from sputniktorch.data.tensor_dataset import TensorDataset
-from sputniktorch.data.loader_worker import LoaderWorker
+from torch.data.sequential_sampler import SequentialSampler
+from torch.data.random_sampler import RandomSampler
+from torch.data.collate import default_collate
+from torch.data.iterable_dataset import IterableDataset
+from torch.data.tensor_dataset import TensorDataset
+from torch.data.loader_worker import LoaderWorker
 
 export DataLoader
 

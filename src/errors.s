@@ -1,4 +1,4 @@
-package sputniktorch.errors
+package torch.errors
 
 
 export Error, ShapeError, DTypeError, DeviceError, AutogradError, ReadOnlyTensorError, DistributedError, CheckpointError

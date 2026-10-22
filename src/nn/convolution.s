@@ -1,8 +1,8 @@
-package sputniktorch.nn.convolution
+package torch.nn.convolution
 
-from sputniktorch.nn.module import Module
-from sputniktorch.nn.functional import kernel_cores, spatial
-from sputniktorch.tensor.factories import randn, zeros
+from torch.nn.module import Module
+from torch.nn.functional import kernel_cores, spatial
+from torch.tensor.factories import randn, zeros
 
 export Convolution
 

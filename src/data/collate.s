@@ -1,8 +1,8 @@
-package sputniktorch.data.collate
+package torch.data.collate
 
-from sputniktorch.tensor.value import Tensor
-from sputniktorch.tensor.factories import tensor
-from sputniktorch.nn.functional import stack
+from torch.tensor.value import Tensor
+from torch.tensor.factories import tensor
+from torch.nn.functional import stack
 
 export default_collate
 

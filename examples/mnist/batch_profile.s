@@ -1,12 +1,12 @@
-package sputniktorch.mnist.batch_profile
+package torch.mnist.batch_profile
 
-import sputniktorch
+import torch
 
 export BatchProfile, elapsed, synchronize
 
 def elapsed(started): (Time.monotonic - started).total_nanoseconds.float / 1e9
 
-def synchronize(device): sputniktorch.synchronize() if device == "mps"
+def synchronize(device): torch.synchronize() if device == "mps"
 
 # Synchronizing every stage changes GPU overlap. Use only for diagnosis,
 # never mix these samples with the ordinary throughput measurements.

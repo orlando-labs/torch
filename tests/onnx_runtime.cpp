@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     TORCH_CHECK(stream.good(), "cannot open reference checkpoint");
     std::vector<char> bytes{std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
     auto references = torch::pickle_load(bytes).toGenericDict();
-    Ort::Env env(ORT_LOGGING_LEVEL_ERROR, "sputniktorch-export-test");
+    Ort::Env env(ORT_LOGGING_LEVEL_ERROR, "sputnik_torch-export-test");
     Ort::SessionOptions options;
     options.SetIntraOpNumThreads(1);
     Ort::Session session(env, argv[1], options);

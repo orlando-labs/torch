@@ -5,12 +5,12 @@
 #include <map>
 #include <unordered_map>
 
-namespace sputniktorch::onnx_export {
+namespace sputnik_torch::onnx_export {
 using torch::jit::Graph;
 using torch::jit::Node;
 using torch::jit::Value;
 
-inline constexpr char error_kind[] = "Sputniktorch.Errors.ONNXError";
+inline constexpr char error_kind[] = "Torch.Errors.ONNXError";
 
 int64_t tensor_dtype(at::ScalarType dtype);
 at::ScalarType scalar_type(Value *value);

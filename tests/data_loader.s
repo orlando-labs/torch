@@ -1,11 +1,11 @@
-package sputniktorch.data_loader_test
+package torch.data_loader_test
 
 import task
-import sputniktorch
+import torch
 from sync import Atomic, Channel
-from sputniktorch.data import Dataset, IterableDataset, DataLoader, RandomSampler
-from sputniktorch.autograd import no_grad, grad_enabled?
-from sputniktorch.checks import check
+from torch.data import Dataset, IterableDataset, DataLoader, RandomSampler
+from torch.autograd import no_grad, grad_enabled?
+from torch.checks import check
 
 export main
 
@@ -74,13 +74,13 @@ def _references():
   batch = _first(loader)
   batch.value!(42)
   check(sample.value == 42, "custom samples cross worker boundary by reference")
-  original = sputniktorch.tensor([1.0, 2.0])
+  original = torch.tensor([1.0, 2.0])
   tensors = DataLoader(ItemsDataset([original]), collate: |samples|: samples[0], num_workers: 1)
   transferred = _first(tensors)
   check(transferred._identity == original._identity, "tensor storage is never serialized or copied")
   transferred.fill!(9)
   check(original.to_a == [9.0, 9.0], "consumer retains a writable tensor reference after join")
-  tracked = sputniktorch.tensor([2.0], requires_grad: true)
+  tracked = torch.tensor([2.0], requires_grad: true)
   contextual = DataLoader(ItemsDataset([tracked, tracked]), num_workers: 2,
     collate: |samples|: samples[0].square)
   detached = no_grad():

@@ -123,7 +123,7 @@ def report(envelope):
     return "\n".join(lines) + "\n"
 
 
-def main():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--device", choices=("cpu", "mps"), default="cpu")
     parser.add_argument("--size", type=int, default=25088)
@@ -138,18 +138,62 @@ def main():
                         help="VM binary for before/after comparison; native build still validates its own compiler")
     parser.add_argument("--before-vm", type=Path,
                         help="Add a saved VM to the same rotating process order for a paired A/B")
+    parser.add_argument("--before-vm-manifest", type=Path,
+                        help="Saved module/adapter inputs for --before-vm (otherwise share the current adapter)")
+    parser.add_argument("--before-vm-runtime-root", type=Path,
+                        help="Saved SDK/runtime sources used to compile the before VM's adapter")
+    parser.add_argument("--before-native", type=Path,
+                        help="Add a saved full-native executable to the rotating A/B")
+    parser.add_argument("--before-build-log", type=Path,
+                        help="Matching full-native build log for --before-native")
     parser.add_argument("--build-log", type=Path, default=ROOT / "build/ffi-calls-build.log")
     parser.add_argument("--output", type=Path, required=True)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    if bool(args.before_native) != bool(args.before_build_log):
+        parser.error("--before-native and --before-build-log must be provided together")
+    if args.before_vm_manifest and not args.before_vm:
+        parser.error("--before-vm-manifest requires --before-vm")
+    if args.before_vm_runtime_root and not args.before_vm:
+        parser.error("--before-vm-runtime-root requires --before-vm")
     if min(args.size, args.iterations, args.kernel_iterations, args.repeats,
            args.processes, args.threads) <= 0:
         parser.error("counts and size must be positive")
+    return args
+
+
+def saved_native_build(native, build_log):
+    before_text = Path(build_log).read_text()
+    before_build, _ = json.JSONDecoder().raw_decode(before_text[before_text.index("{"):])
+    if (not before_build["native_graph_full_coverage"] or before_build["native_bytecode_fallback"]
+            or before_build["native_hash"] != sha256(native)):
+        raise ValueError("Saved native binary/coverage does not match its build log")
+    return before_build
+
+
+def manifest_inputs(manifest):
+    data = json.loads(Path(manifest).read_text())
+    paths = {Path(manifest).resolve()}
+    paths.update(Path(module["path"]) for module in data["modules"])
+    for extension in data.get("native_extensions", []):
+        paths.update(Path(path) for key in ("sources", "headers", "dependencies")
+                     for path in extension.get(key, []))
+        # Header dependencies can be transitive. Hash local include roots too;
+        # external LibTorch libraries/version are recorded separately.
+        for directory in extension.get("include_dirs", []):
+            directory = Path(directory)
+            if directory.is_relative_to(ROOT):
+                paths.update(directory.rglob("*.h"))
+    return {str(path.resolve()): sha256(path) for path in sorted(paths)}
+
+
+def main():
+    args = parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     native_build_sputnik = ROOT.parent / "sputnik-lang/build/sputnik"
     sputnik = args.vm_sputnik.resolve() if args.vm_sputnik else native_build_sputnik
-    manifest = ROOT / "build/sputniktorch.ffi_calls.build.json"
-    native = ROOT / "build/sputnik/sputniktorch.ffi_calls"
+    manifest = ROOT / "build/torch.ffi_calls.build.json"
+    native = ROOT / "build/sputnik/torch.ffi_calls"
     provenance = sources()
     executable_hashes = {"sputnik": sha256(sputnik), "native": sha256(native),
                          "python": sha256(args.python),
@@ -159,6 +203,13 @@ def main():
         args.before_vm = args.before_vm.resolve()
         executable_hashes["before_vm"] = sha256(args.before_vm)
         lanes.insert(1, "vm-before")
+    before_build = None
+    before_vm_inputs = manifest_inputs(args.before_vm_manifest) if args.before_vm_manifest else None
+    if args.before_native:
+        args.before_native = args.before_native.resolve()
+        executable_hashes["before_native"] = sha256(args.before_native)
+        before_build = saved_native_build(args.before_native, args.before_build_log)
+        lanes.insert(1, "native-before")
     build_inputs = json.loads((ROOT / "build/ffi-calls-build-inputs.json").read_text())
     if build_inputs["native_sha256"] != executable_hashes["native"]:
         raise ValueError("Binary changed since input fingerprint; rebuild calls.s")
@@ -179,6 +230,13 @@ def main():
                SPUTNIK_NATIVE_RUNTIME_ROOT=str(ROOT.parent / "sputnik-lang"))
     for key in ("AMT_BOUNDARY_PROFILE", "SPUTNIK_HEAP_STATS", "DYLD_PRINT_LIBRARIES"):
         env.pop(key, None)
+    before_env = env.copy()
+    before_sdk = None
+    if args.before_vm_runtime_root:
+        sdk = args.before_vm_runtime_root.resolve()
+        before_env["SPUTNIK_NATIVE_RUNTIME_ROOT"] = str(sdk)
+        before_sdk = {str(sdk / "runtime/sputnik_ext.h"):
+                      sha256(sdk / "runtime/sputnik_ext.h")}
     common = ["--device", args.device, "--size", str(args.size),
               "--iterations", str(args.iterations), "--kernel-iterations", str(args.kernel_iterations),
               "--repeats", str(args.repeats), "--case", args.case]
@@ -186,9 +244,12 @@ def main():
                 "sputnik-built": [str(native)],
                 "python": [args.python, str(ROOT / "bench/ffi/python_calls.py")]}
     if args.before_vm:
-        commands["vm-before"] = [str(args.before_vm), "run", str(manifest),
+        before_manifest = args.before_vm_manifest.resolve() if args.before_vm_manifest else manifest
+        commands["vm-before"] = [str(args.before_vm), "run", str(before_manifest),
                                  "--grant", "ffi", "--grant", "fs.read", "--"]
-    envelope = dict(schema="sputniktorch.ffi.calls.v1", created_at=datetime.now(timezone.utc).isoformat(),
+    if args.before_native:
+        commands["native-before"] = [str(args.before_native)]
+    envelope = dict(schema="torch.ffi.calls.v1", created_at=datetime.now(timezone.utc).isoformat(),
                     config={key: str(value) if isinstance(value, Path) else value
                             for key, value in vars(args).items()},
                     platform=platform.platform(), source_sha256=provenance,
@@ -196,6 +257,9 @@ def main():
                     libtorch=json.loads((ROOT / "build/native-lock.json").read_text()),
                     lanes=lanes, samples=[])
     envelope["build_inputs"] = build_inputs
+    envelope["before_native_build"] = before_build
+    envelope["before_vm_inputs_sha256"] = before_vm_inputs
+    envelope["before_vm_sdk_sha256"] = before_sdk
     envelope["native_build"] = {key: build[key] for key in (
         "native_hash", "native_backend", "native_graph_full_coverage",
         "native_bytecode_fallback", "native_extensions")}
@@ -217,7 +281,8 @@ def main():
         for option in ("--iterations", "--kernel-iterations", "--repeats"):
             prep[prep.index(option) + 1] = "2"
         print("prepare:", lane, flush=True)
-        result = subprocess.run(prep, cwd=ROOT, env=env, capture_output=True, text=True, timeout=600)
+        result = subprocess.run(prep, cwd=ROOT, env=before_env if lane == "vm-before" else env,
+                                capture_output=True, text=True, timeout=600)
         (output / f"prepare-{lane}.log").write_text(result.stdout + result.stderr)
         if result.returncode:
             raise RuntimeError(f"{lane} preparation failed: {result.stderr[-1500:]}")
@@ -230,7 +295,8 @@ def main():
         for lane in lanes[rotation:] + lanes[:rotation]:
             print(f"process {repeat}:", lane, flush=True)
             command = commands[lane] + common
-            result = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=600)
+            result = subprocess.run(command, cwd=ROOT, env=before_env if lane == "vm-before" else env,
+                                    capture_output=True, text=True, timeout=600)
             (output / f"{repeat}-{lane}.log").write_text(result.stdout + result.stderr)
             if result.returncode:
                 raise RuntimeError(f"{lane} failed: {result.stderr[-1500:]}")
@@ -244,8 +310,15 @@ def main():
             "native_build_sputnik": sha256(native_build_sputnik)}
     if args.before_vm:
         final_hashes["before_vm"] = sha256(args.before_vm)
+    if args.before_native:
+        final_hashes["before_native"] = sha256(args.before_native)
     if provenance != sources() or executable_hashes != final_hashes:
         raise RuntimeError("Sources or executables changed during measurement")
+    if before_vm_inputs is not None and before_vm_inputs != manifest_inputs(args.before_vm_manifest):
+        raise RuntimeError("Saved VM module/adapter inputs changed during measurement")
+    if before_sdk is not None and any(sha256(path) != expected
+                                      for path, expected in before_sdk.items()):
+        raise RuntimeError("Saved VM SDK changed during measurement")
     envelope["summary"] = summarize(envelope["samples"])
     (output / "results.json").write_text(json.dumps(envelope, indent=2, allow_nan=False) + "\n")
     rendered = report(envelope)

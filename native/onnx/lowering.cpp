@@ -1,7 +1,7 @@
 #include "lowering.h"
 #include <torch/csrc/jit/passes/dead_code_elimination.h>
 
-namespace sputniktorch::onnx_export {
+namespace sputnik_torch::onnx_export {
 int64_t tensor_dtype(at::ScalarType dtype) {
   switch (dtype) {
   case at::kFloat: return 1;

@@ -1,4 +1,4 @@
-package sputniktorch.data.loader_worker
+package torch.data.loader_worker
 
 import task
 from sync import Channel, Mutex

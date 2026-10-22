@@ -1,4 +1,4 @@
-# Архитектура sputniktorch
+# Архитектура torch
 
 > Целевой проект. Текущая реализация и ограничения: [implementation-status.md](implementation-status.md).
 
@@ -6,7 +6,7 @@
 
 ## 1. Границы и цели
 
-Sputniktorch — eager tensor framework. Его ближайший ориентир — возможности
+Torch — eager tensor framework. Его ближайший ориентир — возможности
 torch-rb плюс torch-ddp, адаптированные к Sputnik. Совместимость оценивается
 по математическим операциям, gradients и форматам данных, а не по совпадению
 имён каждого Python/Ruby метода.
@@ -19,14 +19,14 @@ TorchDynamo, Inductor, Python callbacks, torch.compile, FSDP, RPC и общий
 Python object loading в первую поставку не входят.
 
 Опыт torch-rb подтверждает разделение native tensor bindings и библиотечного
-слоя на языке-хозяине. Sputniktorch заимствует этот подход, но не Rice, Ruby
+слоя на языке-хозяине. Torch заимствует этот подход, но не Rice, Ruby
 object model или monkey patches. [Torch.rb](https://github.com/ankane/torch.rb)
 
 ## 2. Слои
 
 ```mermaid
 flowchart TD
-  A[Sputnik application] --> B[sputniktorch: Tensor, NN, Optim, Data, Checkpoint, Distributed]
+  A[Sputnik application] --> B[torch: Tensor, NN, Optim, Data, Checkpoint, Distributed]
   B --> C[Приватные native leaves: sputnik_ext C ABI]
   C --> D[C++20 adapter: ATen, autograd, codecs, c10d]
   D --> E[Одна зафиксированная сборка LibTorch]
@@ -42,10 +42,10 @@ flowchart TD
 | C++ adapter | ATen dispatch, ownership, autograd, native waits/hooks, decoder storage, c10d | Вызова произвольного Sputnik-кода из autograd workers |
 | LibTorch | Storage, devices, kernels, graph engine, c10d | Sputnik module registry и публичной политики мутаций |
 
-Логические модули: `sputniktorch`, `sputniktorch.nn`, `sputniktorch.nn.functional`,
-`sputniktorch.optim`, `sputniktorch.data`, `sputniktorch.checkpoint`,
-`sputniktorch.distributed`, `sputniktorch.backends`, `sputniktorch.random`,
-`sputniktorch.testing`. Это модули одной версии пакета. Имя локального import
+Логические модули: `torch`, `torch.nn`, `torch.nn.functional`,
+`torch.optim`, `torch.data`, `torch.checkpoint`,
+`torch.distributed`, `torch.backends`, `torch.random`,
+`torch.testing`. Это модули одной версии пакета. Имя локального import
 можно сократить до `torch` штатными средствами Sputnik.
 
 ## 3. Native ABI и lifetime
@@ -88,8 +88,8 @@ Tensor и Module обязаны реализовать собственные co
 ## 4. Threading, tasks и режим autograd
 
 ATen/C10 имеет собственные workers и thread-local execution state.
-Sputnik strands могут выполняться на разных потоках, а `blocking_symbols`
-выносят вызовы в FFI executor. Поэтому нельзя установить `NoGradGuard` на
+Sputnik strands могут выполняться на разных потоках, а native объявления с
+`from "..." blocking` выносят вызовы в FFI executor. Поэтому нельзя установить `NoGradGuard` на
 одном OS thread, выполнить произвольный Sputnik-блок и ожидать, что guard
 распространится на все вызванные из него native операции.
 
@@ -117,10 +117,21 @@ Sputnik strands могут выполняться на разных потока
 и минимальный Sputnik build для пакета; старый runtime отклоняется до запуска.
 Spike с явно переданным контекстом не считается заменой этого контракта.
 
-Долгие CPU ops, backward, transfer/synchronize, file I/O и waits
-используют существующий `blocking_symbols` path. Cheap metadata остаётся
-прямым вызовом. GPU launch не равен завершению GPU: входные native references
-удерживаются backend-ом до окончания работы.
+Вычислительные kernels и metadata вызываются прямо. `blocking` в объявлении
+используется для file I/O, collective waits, materialize/transfer и явного
+synchronize, которые могут ждать внешнее выполнение. Metadata `amt_info` и
+`amt_synchronize` имеют разные bindings, поэтому чтение версии или количества
+threads не переносится на worker вместе с синхронизацией.
+
+CPU kernel занимает поток до возврата из C++. Для кооперативной VM task длинную
+цепочку можно явно обернуть в `execution_batch`: вся цепочка уходит на FFI worker
+одним вызовом, а внешний task паркуется. Native сохраняет C++ стек async-задачи
+на отдельном host thread и паркует scheduler strand; ожидание future происходит
+вне scheduler worker. Этот driver включается для программ с blocking bindings
+и пока стоит одного host thread на активную async-задачу. Перенос не ускоряет
+CPU вычисление. Размечать каждый короткий
+kernel как `blocking` создаёт лишние переходы и очереди. GPU launch не равен
+завершению GPU: входные native references удерживаются backend-ом до окончания работы.
 
 Cancellation cooperative: опрашивается `sputnik_task_cancelled`; монолитный
 kernel/collective может не поддерживать немедленное прерывание. Отменённая
@@ -162,7 +173,7 @@ Filesystem checkpoint I/O требует соответствующей capabili
 Python запрещён как зависимость пакета, сборки, генерации bindings и тестов.
 Текущий набор bindings написан вручную. Будущий генератор будет
 читать проверенный schema export на C++ или Sputnik; `torchgen` не запускается
-сборкой sputniktorch. Split строк/регулярные выражения не заменяют parser схем.
+сборкой torch. Split строк/регулярные выражения не заменяют parser схем.
 Генерируемые артефакты поставляются с пакетом.
 
 Для каждой разрешённой операции хранится reviewable entry: upstream schema,
@@ -188,7 +199,7 @@ dependency с зафиксированным build identity. В одном пр�
 Package lock дополняется native build lock: upstream tag/SHA/submodules,
 patches, toolchain, SDK, target, flags, TorchConfig fingerprint и хеши
 артефактов. Отдельные build features меняют build identity, но не создают
-отдельный пользовательский пакет `sputniktorch-ddp`.
+отдельный пользовательский пакет `torch-ddp`.
 
 ## 8. Проверенные ограничения Sputnik и обязательные изменения
 

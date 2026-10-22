@@ -1,6 +1,6 @@
-package sputniktorch.nn.parameter_dict
+package torch.nn.parameter_dict
 
-from sputniktorch.nn.module import Module
+from torch.nn.module import Module
 
 export ParameterDict
 

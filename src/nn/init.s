@@ -1,7 +1,7 @@
-package sputniktorch.nn.init
+package torch.nn.init
 
-from sputniktorch.autograd import no_grad
-from sputniktorch.random.generator import Generator
+from torch.autograd import no_grad
+from torch.random.generator import Generator
 
 export zeros!, ones!, constant!, uniform!, normal!, xavier_uniform!, xavier_normal!, kaiming_uniform!, kaiming_normal!
 

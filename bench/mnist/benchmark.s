@@ -1,16 +1,16 @@
-package sputniktorch.mnist_benchmark
+package torch.mnist_benchmark
 
-import sputniktorch
-from sputniktorch.backends import num_threads, num_interop_threads, execution_batch
-from sputniktorch.nn import CrossEntropyLoss
-from sputniktorch.optim import AdamW
-from sputniktorch.optim.lr_scheduler import CosineAnnealingLR
-from sputniktorch.data import DataLoader
-from sputniktorch.mnist.dataset import MNIST
-from sputniktorch.mnist.network import SmallResNet
-from sputniktorch.mnist.training import train_epoch, evaluate
-from sputniktorch.mnist.benchmark_options import BenchmarkOptions
-from sputniktorch.mnist.batch_profile import BatchProfile, elapsed, synchronize
+import torch
+from torch.backends import num_threads, num_interop_threads, execution_batch
+from torch.nn import CrossEntropyLoss
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.data import DataLoader
+from torch.mnist.dataset import MNIST
+from torch.mnist.network import SmallResNet
+from torch.mnist.training import train_epoch, evaluate
+from torch.mnist.benchmark_options import BenchmarkOptions
+from torch.mnist.batch_profile import BatchProfile, elapsed, synchronize
 
 export main
 
@@ -60,12 +60,12 @@ def run(options):
     schedule.step!
 
   phase = Time.monotonic
-  sputniktorch.save(model.state_dict, options.checkpoint)
+  torch.save(model.state_dict, options.checkpoint)
   synchronize(device)
   save_seconds = elapsed(phase)
   phase = Time.monotonic
   restored = SmallResNet(seed: options.seed, device:)
-  restored.load_state_dict!(sputniktorch.load(options.checkpoint, map_location: device))
+  restored.load_state_dict!(torch.load(options.checkpoint, map_location: device))
   synchronize(device)
   restore_seconds = elapsed(phase)
   phase = Time.monotonic
@@ -75,7 +75,7 @@ def run(options):
   final = epochs[-1]
   changed = (loss - final[:test_loss]).abs > 1e-7 or accuracy != final[:accuracy]
   raise ValueError("checkpoint changed test metrics") if changed
-  result = {schema: "sputniktorch.mnist.sample.v1", device:, version: sputniktorch.version(),
+  result = {schema: "torch.mnist.sample.v1", device:, version: torch.version(),
     threads: num_threads(), interop_threads: num_interop_threads(),
     train_count: train.count, test_count: test.count, parameters:, batch_size: options.batch_size,
     seed: options.seed, optimizer: "matched", profiled: options.profile,

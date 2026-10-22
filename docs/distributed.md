@@ -12,14 +12,14 @@
 
 Это ориентир функциональности, а не обещание побитово повторить реализацию:
 
-| Возможность gem | Решение sputniktorch |
+| Возможность gem | Решение torch |
 | --- | --- |
 | Process group init/destroy, rank/world size | Group object + явные lifecycle methods |
 | Gloo/NCCL и detection | Gloo обязателен на Mac; NCCL — Linux/CUDA этап |
 | TCPStore, FileStore, HashStore | Встроены в distributed module; HashStore только intra-process |
 | Barrier, all-reduce, broadcast, ReduceOp | Встроенные bang APIs, без global singleton requirement |
 | DDP parameter synchronization и gradient hooks | Встроенный DDP с определённым порядком synchronization |
-| torchrun, ranks, multi-node fixed world, restarts | Собственный `sputniktorch-run`, fresh native worker executables |
+| torchrun, ranks, multi-node fixed world, restarts | Собственный `torch-run`, fresh native worker executables |
 | `fork_world` / spawn helper | Spawn-based test/helper API; fork после accelerator init запрещён |
 | `map_location`, `weights_only` additions | Ядро checkpoint, независимо от distributed imports |
 | Device helpers, scalar item | Нормальный Device и проверяемый Tensor.item с первого релиза |
@@ -28,7 +28,7 @@
 
 В gem `mps → gloo` присутствует как default mapping; native collectives
 получают tensors непосредственно. Это не доказательство работоспособности
-MPS collectives. В sputniktorch backend выбирается по подтверждённой паре
+MPS collectives. В torch backend выбирается по подтверждённой паре
 transport/device, а не только по такому mapping.
 
 ## 2. Матрица платформ
@@ -162,7 +162,7 @@ Broadcast BatchNorm buffers не является SyncBatchNorm: статист�
 
 ## 5. Launcher
 
-`sputniktorch-run` входит в ту же поставку. Запускает заранее собранный native
+`torch-run` входит в ту же поставку. Запускает заранее собранный native
 worker executable с аргументами; не компилирует проект независимо на каждом
 rank и не сериализует Sputnik closures. Spawn-helper для tests принимает путь
 к worker/entrypoint и primitive configuration.

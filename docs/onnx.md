@@ -1,6 +1,6 @@
 # ONNX export
 
-`sputniktorch.onnx` экспортирует inference-граф Sputnik `Module` в стандартный
+`torch.onnx` экспортирует inference-граф Sputnik `Module` в стандартный
 ONNX. Модель исполняется в Sputnik; C++ tracer LibTorch записывает ATen-операции,
 адаптер переводит их в ONNX, а serializer и structural checker LibTorch
 создают и проверяют protobuf. Python symbolic registry не используется.
@@ -14,7 +14,7 @@ ONNX. Модель исполняется в Sputnik; C++ tracer LibTorch зап
 ## API
 
 ```sputnik
-from sputniktorch.onnx import export_model
+from torch.onnx import export_model
 
 model.eval!
 program = export_model(model, images,
@@ -118,8 +118,8 @@ Structural checker LibTorch проверяет сериализованную м
 
 ```sh
 ./tools/build examples/export_mnist.s
-PATH=/nonexistent ./build/sputnik/sputniktorch.export_mnist_example
-PYTORCH_ENABLE_MPS_FALLBACK=0 PATH=/nonexistent ./build/sputnik/sputniktorch.export_mnist_example \
+PATH=/nonexistent ./build/sputnik/torch.export_mnist_example
+PYTORCH_ENABLE_MPS_FALLBACK=0 PATH=/nonexistent ./build/sputnik/torch.export_mnist_example \
   --device mps --output build/mnist-trained-mps.onnx --references build/mnist-trained-mps-reference.pt
 
 # Optional test dependency, не зависимость сборки или runtime пакета:
@@ -130,7 +130,7 @@ PYTORCH_ENABLE_MPS_FALLBACK=0 PATH=/nonexistent ./build/sputnik/sputniktorch.exp
 
 Test runner использует официальный C++ ONNX Runtime 1.30.0 macOS arm64,
 архив проверяется по SHA256. Runtime связан только с отдельным validator
-`sputniktorch_onnx_runtime`. Он сравнивает shape/dtype, floating values с
+`torch_onnx_runtime`. Он сравнивает shape/dtype, floating values с
 rtol=1e-4/atol=1e-5 и integer/bool outputs точно. Native programs запускаются
 с `PATH=/nonexistent`, а dylib audit отвергает `libpython`, Python.framework
 и `torch_python`. MPS job отключает automatic CPU fallback.

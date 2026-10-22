@@ -5,7 +5,7 @@
 #include <torch/csrc/distributed/c10d/ProcessGroupGloo.hpp>
 #include <torch/csrc/distributed/c10d/TCPStore.hpp>
 #endif
-using namespace sputniktorch;
+using namespace sputnik_torch;
 extern "C" {
 void amt_group_free(SputnikCtx *, void *ptr) {
   delete static_cast<GroupCore *>(ptr);
@@ -43,7 +43,7 @@ SputnikStatus amt_group_open(SputnikCtx *cx, const SputnikValue *a, size_t n, Sp
       throw FaultPending{};
     p.release();
 #else
-    throw Error("Sputniktorch.Errors.DistributedError","adapter was built without matching Gloo headers");
+    throw Error("Torch.Errors.DistributedError","adapter was built without matching Gloo headers");
 #endif
   });
 }
@@ -55,7 +55,7 @@ SputnikStatus amt_collective(SputnikCtx *cx, const SputnikValue *a, size_t n, Sp
     if (!sputnik_handle_ptr(cx, a[0], group_tag, &raw))
       throw FaultPending{};
     auto &g = *static_cast<GroupCore *>(raw);
-    require(!g.failed, "Sputniktorch.Errors.DistributedError",
+    require(!g.failed, "Torch.Errors.DistributedError",
             "process group has failed; recreate worker group");
     auto op = string(cx, a[1]);
     if (op == "rank") {
@@ -74,8 +74,8 @@ SputnikStatus amt_collective(SputnikCtx *cx, const SputnikValue *a, size_t n, Sp
       writable(t);
       require(t.tensor.device().is_cpu() && t.tensor.layout() == at::kStrided &&
                   t.tensor.is_contiguous(),
-              "Sputniktorch.Errors.DistributedError", "Gloo requires contiguous dense CPU tensors");
-      require(!t.tensor.requires_grad(), "Sputniktorch.Errors.DistributedError",
+              "Torch.Errors.DistributedError", "Gloo requires contiguous dense CPU tensors");
+      require(!t.tensor.requires_grad(), "Torch.Errors.DistributedError",
               "collectives require detached tensors");
       values.push_back(t.tensor);
     }
@@ -94,7 +94,7 @@ SputnikStatus amt_collective(SputnikCtx *cx, const SputnikValue *a, size_t n, Sp
         work = g.group->broadcast(values, opts);
       } else
         throw Error("ArgumentError", "unknown collective");
-      require(work->wait(g.timeout), "Sputniktorch.Errors.DistributedError",
+      require(work->wait(g.timeout), "Torch.Errors.DistributedError",
               "collective did not complete");
     } catch (...) {
       g.failed = true;
@@ -102,7 +102,7 @@ SputnikStatus amt_collective(SputnikCtx *cx, const SputnikValue *a, size_t n, Sp
     }
     *out = a[0];
 #else
-    throw Error("Sputniktorch.Errors.DistributedError","Gloo is unavailable");
+    throw Error("Torch.Errors.DistributedError","Gloo is unavailable");
 #endif
   });
 }
@@ -111,7 +111,7 @@ SputnikStatus amt_group_env(SputnikCtx *cx, const SputnikValue *a, size_t n, Spu
     argc_check(n, 1);
     auto env = [](const char *name) {
       auto value = std::getenv(name);
-      require(value != nullptr, "Sputniktorch.Errors.DistributedError",
+      require(value != nullptr, "Torch.Errors.DistributedError",
               std::string("missing launcher variable: ") + name);
       return std::string(value);
     };

@@ -1,10 +1,10 @@
-package sputniktorch.random.core
+package torch.random.core
 
-from sputniktorch.errors import Error
+from torch.errors import Error
 
 export GeneratorCore, make, sample!
 
-native class GeneratorCore from "sputniktorch.GeneratorCore" collected:
+native class GeneratorCore from "torch.GeneratorCore" collected:
   def destroy!() from "amt_generator_free"
 
 native def make(seed as Int) from "amt_generator_new"

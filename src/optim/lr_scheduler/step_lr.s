@@ -1,4 +1,4 @@
-package sputniktorch.optim.lr_scheduler.step_lr
+package torch.optim.lr_scheduler.step_lr
 
 export StepLR
 
