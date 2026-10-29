@@ -102,6 +102,11 @@ kernels or invoke Python, nvcc or hipcc. The provider must supply LibTorch
 2.14.0 or 2.14.1 headers and shared libraries; runtime ROCm libraries remain
 dependencies of that provider.
 
+Both the adapter and generated Sputnik consumers compile with `USE_ROCM` to
+match LibTorch's ROCm C++ hook ABI. Runtime dependencies follow the provider's
+recorded library paths. When several RCCL versions are installed, prepending
+an older ROCm library directory can override the provider's matching RCCL.
+
 ROCm tensors use `device: "cuda:0"`, following
 [PyTorch HIP semantics](https://docs.pytorch.org/docs/stable/notes/hip.html).
 `torch.backends.rocm_built?` identifies a HIP build and `rocm_available?` also
