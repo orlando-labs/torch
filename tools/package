@@ -39,6 +39,10 @@ if [ "$backend" = cuda ]; then
     "-DPACKAGE_VERSION=$version" "-DOUTPUT=$output" -P "$root/cmake/PackageCuda.cmake"
 fi
 if [ "$backend" = rocm ]; then
+  if [ "$native_mode" = prebuilt ] && [ "$module_mode" = source ] && [ "$bundle" = runtime ] && [ "$matrix" = OFF ]; then
+    exec cmake "-DROOT=$root" "-DSPUTNIK_ROOT=$sputnik_root" "-DTORCH_PREFIX=$torch_prefix" \
+      "-DPACKAGE_REF=$package_ref" "-DPACKAGE_VERSION=$version" "-DOUTPUT=$output" -P "$root/cmake/PackageRocm.cmake"
+  fi
   if [ "$native_mode" != prebuilt ] || [ "$module_mode" != source ] || [ "$bundle" != none ] || [ "$matrix" != OFF ] || [ "$package_ref" != torch ]; then
     echo 'Local ROCm packaging requires --native prebuilt --modules source --bundle none --package-ref torch' >&2
     exit 2

@@ -156,6 +156,29 @@ and is not a public registry artifact. Its preparation verifies an installed
 consumer in VM with the compiler disabled and in full native mode, including
 forward, backward and an SGD training update on AMD.
 
+## Linux ROCm registry package
+
+The runtime recipe carries LibTorch 2.14.0 and matching RCCL 2.27.7, with
+relative library paths and scoped modules. ROCm 6.4.3 userspace, the AMD driver
+and rocBLAS Tensile data remain system dependencies. The recipe verifies the
+completed archive on three gfx906 GPUs, in VM and full native modes, without
+producer library paths. It does not invoke Python.
+
+```sh
+tools/package --backend rocm --native prebuilt --modules source --bundle runtime \
+  --package-ref slowpilot/torch --version 0.1.3 \
+  --torch-prefix /path/to/libtorch --out-dir build/registry-013-rocm
+sputnik pkg install slowpilot/torch --version 0.1.3 \
+  --variant linux-x86_64-gnu-rocm643-prebuilt-source-runtime \
+  --allow-native --allow-native-large
+```
+
+Select this variant explicitly: package-format v1 does not expose a generic
+ROCm backend selector. The native provider records the exact ROCm LibTorch ABI
+and content hash. On gfx906, retain `ROCBLAS_TENSILE_LIBPATH` if the system
+rocBLAS installation lacks its kernel data. The package uses Sputnik's current
+bare function semantics; callback references use `&name`.
+
 ## Linux CUDA runtime package
 
 The CUDA recipe accepts exactly **LibTorch 2.14.0+cu130** and uses its C++
