@@ -1,23 +1,29 @@
 # ROCm dependent rebuild — 2026-10-29
 
-Target: `slowpilot@lab.orlando-labs.com:22015`, host `dev-ai-amd`.
-Read-only inventory found ROCm 6.4.3, three gfx906 AMD devices and a LibTorch
-2.14.0 C++ HIP provider under `/usr/local/lib64/python3.12/site-packages/torch`.
-The provider's C++ headers/libraries are consumed directly; the package build
-and tests never invoke Python or link its runtime.
+Language: `3eb0f05da50ba307d5f719e0b194de6317304b29`. Linux x86_64,
+LibTorch 2.14.0, ROCm 6.4.3, three gfx906 AMD devices.
 
-Added HIP library detection for Linux C++ providers, a compiler selection that
-works without clang++, ROCm capability predicates, VM/full-native AMD tests,
-a local package producer and a remote-worker package/training test. The local
-package keeps the recorded host LibTorch/ROCm external and is not relocatable
-or a public registry release.
+The Linux C++ provider selects torch_hip/c10_hip and propagates USE_ROCM to
+preserve the C++ hook ABI. Source adapter builds, native C++ probes and actual
+Sputnik VM/full-native checks passed on all three devices. Native graphs have
+full coverage, zero VM fallback and are VM independent. Native execution with
+PATH=/nonexistent did not load libpython or libtorch_python.
 
-CPU/CUDA/ROCm provider selection and missing-library checks passed. Notebook
-bundle snapshot/registration checks passed. Current macOS torch CPU checks
-passed in VM and full native modes. Actual MPS validation passed with automatic CPU fallback disabled, including CUDA-tagged checkpoint transfer and shared storage. Both native graphs have full coverage, zero VM fallback and are VM independent.
+The stock ROCm 6.4.3 rocBLAS package lacks gfx906 Tensile kernels. A signed
+AMD ROCm 6.3.4 RPM was extracted into a separate user directory; its gfx906
+kernel data is selected through ROCBLAS_TENSILE_LIBPATH. System ROCm shared
+libraries remain installed. The origin and SHA-256 are in rocm-result.json.
 
-Remote source upload and deployment are pending explicit user authorization:
-automatic approval review rejected transfer of the current local language and
-torch sources plus notebook sources from port 22176 to port 22015. No source
-transfer was retried. The new server's build dependencies and a private PCRE2
-10.47 prefix were prepared; Sputnik/remote/torch are not installed there yet.
+The local prebuilt package passed installation and VM execution with its
+compiler disabled, plus a full-native installed consumer. The production
+notebook worker installed that package through the API and passed GPU matrix
+multiplication, gradients and SGD training. Receipt replay preserved RunId;
+the test project was deleted. The same package was installed in the user's
+normal package home with a runnable example.
+
+macOS CPU checks passed in VM/full-native modes. Actual MPS checks passed
+with CPU fallback disabled. ROCm capability predicates return Bool/false on
+macOS. Notebook snapshot and C++ provider selection tests passed.
+
+The package is local, keeps LibTorch/Tensile external and is not relocatable
+or a public registry artifact. See docs/package-building.md for the commands.

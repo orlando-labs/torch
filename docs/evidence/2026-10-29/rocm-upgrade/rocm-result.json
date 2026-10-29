@@ -1,0 +1,45 @@
+{
+  "language_commit": "3eb0f05da50ba307d5f719e0b194de6317304b29",
+  "libtorch": "2.14.0",
+  "rocm": "6.4.3",
+  "gpu_architecture": "gfx906",
+  "gpu_count": 3,
+  "cpp_provider_probes": "forward/backward/training passed on all 3 devices",
+  "sputnik_vm": "passed on all 3 devices",
+  "sputnik_native": "passed on all 3 devices",
+  "python_runtime_loaded": false,
+  "native_graph": {
+    "status": "ok",
+    "root": "torch.rocm_test",
+    "native_graph_code_count": 1166,
+    "native_graph_native_code_count": 1166,
+    "native_graph_vm_fallback_code_count": 0,
+    "native_graph_full_coverage": true,
+    "native_graph_vm_independent": true
+  },
+  "installed_package_native": {
+    "status": "ok",
+    "native_full_coverage": true,
+    "native_vm_independent": true,
+    "native_fallback_code_count": 0
+  },
+  "package": {
+    "name": "torch",
+    "version": "0.1.3-rocm-local",
+    "digest": "sha256:5b526e0086781d95d06ae6b156ff517d5a65773852d61ef1fc22203bd2e00954",
+    "variant": "source"
+  },
+  "remote_worker": {
+    "verified": true,
+    "receipt_replay_same_run": true,
+    "project_deleted": true,
+    "result": "\"PASS ROCm LibTorch 2.14.0 forward=14 gradient=[2,4,6] matmul=OK trained_weight=2.999999761581421\""
+  },
+  "tensile": {
+    "source": "https://repo.radeon.com/rocm/rhel9/6.3.4/main/rocblas-4.3.0.60304-76.el9.x86_64.rpm",
+    "sha256": "1f872a3b25b01f69bf17d90ed84ce69ca95925ba433bbce9ab94dc6ddc36b3c6",
+    "rpm_signature": "digests signatures OK",
+    "gfx906_files": 156,
+    "selection": "ROCBLAS_TENSILE_LIBPATH; system ROCm libraries retained"
+  }
+}

@@ -1,6 +1,6 @@
 package torch.rocm_remote_verification
 
-from net.http import Client
+from net.http import Client, Request
 
 export main
 
@@ -16,7 +16,7 @@ class CoreClient:
       when "GET": @http.get(@origin + path, headers:)
       when "PUT": @http.put(@origin + path, headers:, body:)
       when "POST": @http.post(@origin + path, headers:, body:)
-      when "DELETE": @http.delete(@origin + path, headers:, body:)
+      when "DELETE": @http.send(Request(method: :delete, url: @origin + path, headers:, body:))
       else: raise ArgumentError("unsupported method")
     text = response.body_text(limit: 16777216)
     raise IOError("Remote HTTP #{response.status}: #{text}") unless response.status == 200
