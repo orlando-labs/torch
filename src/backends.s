@@ -20,7 +20,7 @@ def cuda_built?(): _info("cuda_built")
 def cuda_available?(): _info("cuda_available")
 def cuda_device_count(): _info("cuda_device_count")
 def rocm_built?(): _info("rocm_built")
-def rocm_available?(): rocm_built? and cuda_available?
+def rocm_available?(): rocm_built?() and cuda_available?()
 def synchronize(): _synchronize()
 
 def num_threads(): _info("num_threads")
