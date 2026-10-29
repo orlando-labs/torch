@@ -4,12 +4,14 @@ root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 torch_prefix=${LIBTORCH_PREFIX:-}
 sputnik_root=${SPUTNIK_ROOT:-"$root/../sputnik-lang"}
 devices=0
+native_library=
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --torch-prefix) shift; torch_prefix=$1 ;;
     --sputnik-root) shift; sputnik_root=$1 ;;
     --devices) shift; devices=$1 ;;
-    --help) echo 'usage: tools/test-rocm --torch-prefix DIR [--sputnik-root DIR] [--devices "0 1 2"]'; exit 0 ;;
+    --native-library) shift; native_library=$1 ;;
+    --help) echo 'usage: tools/test-rocm --torch-prefix DIR [--sputnik-root DIR] [--devices "0 1 2"] [--native-library FILE]'; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -22,10 +24,29 @@ done
 cd "$root"
 mkdir -p build/logs
 cmake -P tests/torch_provider.cmake
-./tools/build tests/rocm.s --no-notebook --torch-prefix "$torch_prefix" --sputnik-root "$sputnik_root" >build/logs/rocm-build.log 2>&1
+manifest=build/torch.rocm_test.build.json
+if [ -n "$native_library" ]; then
+  # The same source-built C-ABI adapter is consumed by the package/worker path.
+  # Copy it to an immutable hash directory; each test still compiles its own
+  # Sputnik graph and enforces full native coverage.
+  cmake "-DROOT=$root" -DENTRY=tests/rocm.s -DMODE=notebook -DPREPARE_NOTEBOOK=OFF \
+    "-DTORCH_PREFIX=$torch_prefix" "-DSPUTNIK_ROOT=$sputnik_root" -P cmake/BuildSputnik.cmake
+  cmake "-DMANIFEST=$root/$manifest" "-DLIBRARY=$native_library" \
+    "-DOUTPUT=$root/build/torch.rocm-prebuilt.build.json" -P tests/prebuilt_manifest.cmake
+  manifest=build/torch.rocm-prebuilt.build.json
+  for device in $devices; do
+    HIP_VISIBLE_DEVICES=$device "$sputnik_root/build/sputnik" run "$manifest" --grant ffi --grant fs.read >"build/logs/rocm-vm-$device.log" 2>&1
+    cat "build/logs/rocm-vm-$device.log"
+  done
+  "$sputnik_root/build/sputnik" build "$manifest" --target native --require-full-native --out-dir build/sputnik >build/logs/rocm-build.log 2>&1
+else
+  ./tools/build tests/rocm.s --no-notebook --torch-prefix "$torch_prefix" --sputnik-root "$sputnik_root" >build/logs/rocm-build.log 2>&1
+fi
 for device in $devices; do
-  HIP_VISIBLE_DEVICES=$device "$sputnik_root/build/sputnik" run build/torch.rocm_test.build.json --grant ffi --grant fs.read >"build/logs/rocm-vm-$device.log" 2>&1
-  cat "build/logs/rocm-vm-$device.log"
+  if [ -z "$native_library" ]; then
+    HIP_VISIBLE_DEVICES=$device "$sputnik_root/build/sputnik" run "$manifest" --grant ffi --grant fs.read >"build/logs/rocm-vm-$device.log" 2>&1
+    cat "build/logs/rocm-vm-$device.log"
+  fi
   HIP_VISIBLE_DEVICES=$device LD_DEBUG=libs PATH=/nonexistent ./build/sputnik/torch.rocm_test >"build/logs/rocm-native-$device.log" 2>"build/logs/rocm-libraries-$device.log"
   cat "build/logs/rocm-native-$device.log"
   if /usr/bin/grep -E 'libpython[0-9.]|libtorch_python' "build/logs/rocm-libraries-$device.log"; then

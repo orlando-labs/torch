@@ -130,6 +130,17 @@ coverage and tests each visible AMD device in VM and native modes. Native
 execution runs with an unavailable executable search path and rejects loaded
 `libpython` or `libtorch_python` libraries.
 
+An adapter already built from these sources can be tested through the package
+ABI with `--native-library build/rocm-package-native/libtorch_notebook.so`.
+The test copies it into a content-addressed directory, runs the Sputnik graph
+in VM mode and builds that graph with `--require-full-native`.
+
+On gfx906 hosts, check that rocBLAS ships the corresponding Tensile kernels.
+ROCm 6.4 packages can omit them. A separate matching kernel data directory can
+be selected with `ROCBLAS_TENSILE_LIBPATH`; the local package records that path
+alongside the C++ provider. Preserve the same setting when running its native
+consumers or a notebook worker.
+
 For installation on the same server, a local prebuilt adapter package can be
 created and checked through an isolated package home:
 
