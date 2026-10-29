@@ -83,7 +83,9 @@ def run(device):
   close(criterion(scores, binary_targets), full([2], 1.5 * log2, device:), "multilabel soft-margin class averaging")
   check(criterion.named_buffers.has_key?("weight") and criterion.parameters.empty?, "loss weight is a buffer")
   restored = MultiLabelSoftMarginLoss(weight: ones([2], device:), reduction: :none)
-  restored.load_state_dict!(criterion.state_dict)
+  saved = criterion.state_dict
+  check(saved["weight"].readonly? and not criterion.named_buffers["weight"].readonly?, "state dict snapshots preserve live buffers")
+  restored.load_state_dict!(saved)
   close(restored(scores, binary_targets), criterion(scores, binary_targets), "loss weight state restore")
   f.multilabel_soft_margin_loss(scores, binary_targets, weight: weights, reduction: :sum).backward!
   close(scores.grad, tensor([[-0.5, 0.25], [0.5, -0.25]], device:), "multilabel soft-margin derivative")

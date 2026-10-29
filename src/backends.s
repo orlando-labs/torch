@@ -3,7 +3,7 @@ package torch.backends
 from torch.errors import Error
 from torch.autograd.context import execution_mode
 
-export version, mps_built?, mps_available?, cuda_built?, cuda_available?, cuda_device_count, synchronize, num_threads, num_interop_threads, execution_batch
+export version, mps_built?, mps_available?, cuda_built?, cuda_available?, cuda_device_count, rocm_built?, rocm_available?, synchronize, num_threads, num_interop_threads, execution_batch
 
 native def _info(key as Str) from "amt_info"
 native def _synchronize() from "amt_synchronize" blocking
@@ -19,6 +19,8 @@ def mps_available?(): _info("mps_available")
 def cuda_built?(): _info("cuda_built")
 def cuda_available?(): _info("cuda_available")
 def cuda_device_count(): _info("cuda_device_count")
+def rocm_built?(): _info("rocm_built")
+def rocm_available?(): rocm_built? and cuda_available?
 def synchronize(): _synchronize()
 
 def num_threads(): _info("num_threads")

@@ -175,7 +175,8 @@ def huber_loss(input, target, delta: 1.0, reduction: :mean):
 def kl_div(input, target, log_target: false, reduction: :mean):
   if reduction.str == "batchmean":
     loss = kernel("kl_div", [input, target], [2, log_target])
-    return if input.rank == 0 then loss else loss / input.shape[0]
+    return loss if input.rank == 0
+    return loss / input.shape[0]
   kernel("kl_div", [input, target], [reduction_code(reduction), log_target])
 
 def poisson_nll_loss(input, target, log_input: true, full: false, eps: 1e-8, reduction: :mean):

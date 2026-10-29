@@ -1,0 +1,35 @@
+created /private/tmp/torch-notebook-31698e57cbb7/Edited notebook.sputnikbook
+Edited notebook (sputnik-notebook v3)
+dependency /tmp/torch-notebook-31698e57cbb7/package [auto-import root exports]
+sheet main: Main (1 cells) [default]
+not evaluated; use F6 Apply or --run-sheet to initialize the environment
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+CMake Warning (unused-cli):
+  Manually-specified variables were not used by the project:
+
+    GLOO_INCLUDE_DIR
+    SPUTNIK_ROOT
+
+
+-- Build files have been written to: /tmp/torch-notebook-31698e57cbb7/package/build/notebook-native
+ninja: no work to do.
+updated native dependency in /private/tmp/torch-notebook-31698e57cbb7/Edited notebook.sputnikbook; reopen the project/restart its worker before Run
+-- Prepared coherent notebook bundle: /tmp/torch-notebook-31698e57cbb7/package/build/notebook/c9f2fcbbcc03977c8eac1bee2ba5f2bba326d81fb43d91e00e21b813145a1890
+Edited notebook (sputnik-notebook v3)
+dependency /tmp/torch-notebook-31698e57cbb7/package [auto-import root exports]
+sheet main: Main (1 cells) [default]
+not evaluated; use F6 Apply or --run-sheet to initialize the environment
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /tmp/torch-notebook-31698e57cbb7/package/build/notebook-native
+ninja: no work to do.
+updated native dependency in /private/tmp/torch-notebook-31698e57cbb7/Edited notebook.sputnikbook; reopen the project/restart its worker before Run
+-- Prepared coherent notebook bundle: /tmp/torch-notebook-31698e57cbb7/package/build/notebook/f6933a206707a2d9cb644480a69c34a4936f940b78c1d2b385a4aef95f8634f5
+Edited notebook (sputnik-notebook v3)
+dependency /tmp/torch-notebook-31698e57cbb7/package [auto-import root exports]
+sheet main: Main (1 cells) [default]
+not evaluated; use F6 Apply or --run-sheet to initialize the environment
+unchanged native dependency in /private/tmp/torch-notebook-31698e57cbb7/Edited notebook.sputnikbook; reopen the project/restart its worker before Run
+-- Prepared coherent notebook bundle: /tmp/torch-notebook-31698e57cbb7/package/build/notebook/f6933a206707a2d9cb644480a69c34a4936f940b78c1d2b385a4aef95f8634f5
+-- PASS notebook bundle snapshots, nested modules, registration, idempotence and failure preservation

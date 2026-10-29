@@ -80,10 +80,10 @@ foreach(kind mps source)
     if(status EQUAL 0 OR NOT error MATCHES "missing native provider")
       message(FATAL_ERROR "Missing dependencies were not rejected before compilation: ${error}")
     endif()
-    file(READ "${MPS_PACKAGES}/providers/runtime/sputnik.toml" wrong)
-    string(REPLACE "version = \"2.14.0\"" "version = \"2.11.0\"" wrong "${wrong}")
+    file(READ "${MPS_PACKAGES}/providers/runtime/sputnik.build.json" wrong)
+    string(REPLACE "\"version\":\"2.14.0\"" "\"version\":\"2.11.0\"" wrong "${wrong}")
     file(MAKE_DIRECTORY "${WORK}/wrong-runtime")
-    file(WRITE "${WORK}/wrong-runtime/sputnik.toml" "${wrong}")
+    file(WRITE "${WORK}/wrong-runtime/sputnik.build.json" "${wrong}")
     execute_process(COMMAND "${CMAKE_COMMAND}" -E env
       "SPUTNIK_PKG_HOME=${WORK}/wrong-version" "SPUTNIK_NATIVE_PROVIDERS=${WORK}/wrong-runtime:${MPS_PACKAGES}/providers/sdk"
       SPUTNIK_NATIVE_CXX=/compiler-must-not-run "${cli}" pkg install "${artifact}"

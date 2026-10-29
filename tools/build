@@ -6,12 +6,14 @@ mode=native
 fetch=OFF
 probes=OFF
 notebook_projects=
+prepare_notebook=ON
 torch_prefix=${LIBTORCH_PREFIX:-}
 sputnik_root=${SPUTNIK_ROOT:-"$root/../sputnik-lang"}
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --run-vm) mode=vm ;;
     --prepare-notebook) mode=notebook ;;
+    --no-notebook) prepare_notebook=OFF ;;
     --notebook-project)
       [ "$#" -ge 2 ] || { echo '--notebook-project requires a project directory' >&2; exit 2; }
       shift
@@ -23,13 +25,17 @@ while [ "$#" -gt 0 ]; do
     --probes) probes=ON ;;
     --torch-prefix) shift; torch_prefix=$1 ;;
     --sputnik-root) shift; sputnik_root=$1 ;;
-    --help) echo 'usage: tools/build [entry.s] [--run-vm | --prepare-notebook] [--notebook-project PROJECT (repeatable)] [--fetch-deps] [--probes] [--torch-prefix PATH] [--sputnik-root PATH]'; exit 0 ;;
+    --help) echo 'usage: tools/build [entry.s] [--run-vm | --prepare-notebook] [--no-notebook] [--notebook-project PROJECT (repeatable)] [--fetch-deps] [--probes] [--torch-prefix PATH] [--sputnik-root PATH]'; exit 0 ;;
     --*) echo "unknown option: $1" >&2; exit 2 ;;
     *) entry=$1 ;;
   esac
   shift
 done
+if [ "$prepare_notebook" = OFF ] && { [ "$mode" = notebook ] || [ -n "$notebook_projects" ]; }; then
+  echo '--no-notebook cannot be combined with notebook preparation' >&2
+  exit 2
+fi
 if [ -z "$torch_prefix" ]; then torch_prefix=$(brew --prefix pytorch); fi
 exec cmake "-DROOT=$root" "-DENTRY=$entry" "-DMODE=$mode" "-DFETCH_DEPS=$fetch" \
   "-DPROBES=$probes" "-DTORCH_PREFIX=$torch_prefix" "-DSPUTNIK_ROOT=$sputnik_root" \
-  "-DNOTEBOOK_PROJECTS=$notebook_projects" -P "$root/cmake/BuildSputnik.cmake"
+  "-DNOTEBOOK_PROJECTS=$notebook_projects" "-DPREPARE_NOTEBOOK=$prepare_notebook" -P "$root/cmake/BuildSputnik.cmake"

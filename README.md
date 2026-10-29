@@ -63,6 +63,9 @@ Bootstrap также принимает LibTorch `2.14.1`: его Gloo pin со�
 отдельного списка `blocking_symbols` в генераторе больше нет. Вычислительные
 kernels вызываются inline; ожидания и I/O отмечены отдельно.
 
+Для отдельного прогона без обновления зарегистрированных notebooks используйте
+`tools/build tests/losses.s --no-notebook` (также работает с `--run-vm`).
+
 ```sh
 ./tools/test         # CPU, VM/native, serialization, Gloo/DDP, launcher failures
 ./tools/test --mps   # дополнительно реальное обучение на MPS

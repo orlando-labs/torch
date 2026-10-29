@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+torch_prefix=${LIBTORCH_PREFIX:-}
+sputnik_root=${SPUTNIK_ROOT:-"$root/../sputnik-lang"}
+devices=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --torch-prefix) shift; torch_prefix=$1 ;;
+    --sputnik-root) shift; sputnik_root=$1 ;;
+    --devices) shift; devices=$1 ;;
+    --help) echo 'usage: tools/test-rocm --torch-prefix DIR [--sputnik-root DIR] [--devices "0 1 2"]'; exit 0 ;;
+    *) echo "unknown option: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+[ -n "$torch_prefix" ] || { echo 'Pass --torch-prefix or LIBTORCH_PREFIX' >&2; exit 2; }
+[ -n "$devices" ] || { echo '--devices must contain GPU ordinals' >&2; exit 2; }
+for device in $devices; do
+  case "$device" in *[!0-9]*) echo 'GPU ordinals must be nonnegative integers' >&2; exit 2 ;; esac
+done
+cd "$root"
+mkdir -p build/logs
+cmake -P tests/torch_provider.cmake
+./tools/build tests/rocm.s --no-notebook --torch-prefix "$torch_prefix" --sputnik-root "$sputnik_root" >build/logs/rocm-build.log 2>&1
+for device in $devices; do
+  HIP_VISIBLE_DEVICES=$device "$sputnik_root/build/sputnik" run build/torch.rocm_test.build.json --grant ffi --grant fs.read >"build/logs/rocm-vm-$device.log" 2>&1
+  cat "build/logs/rocm-vm-$device.log"
+  HIP_VISIBLE_DEVICES=$device LD_DEBUG=libs PATH=/nonexistent ./build/sputnik/torch.rocm_test >"build/logs/rocm-native-$device.log" 2>"build/logs/rocm-libraries-$device.log"
+  cat "build/logs/rocm-native-$device.log"
+  if /usr/bin/grep -E 'libpython[0-9.]|libtorch_python' "build/logs/rocm-libraries-$device.log"; then
+    echo 'FAIL ROCm executable loaded a Python runtime library' >&2
+    exit 1
+  fi
+done
+printf '%s\n' 'PASS ROCm VM/full-native, AMD devices and interpreter-free execution'

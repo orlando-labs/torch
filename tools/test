@@ -4,6 +4,9 @@ export PYTORCH_ENABLE_MPS_FALLBACK=0
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
 mkdir -p build/logs
+build_test() {
+  ./tools/build --no-notebook "$@"
+}
 cmake -P tests/notebook_bundle.cmake
 run_without_python() {
   executable=$1
@@ -18,30 +21,30 @@ run_without_python() {
     exit 1
   fi
 }
-./tools/build tests/cpu.s --probes >build/logs/build-cpu.log 2>&1
+build_test tests/cpu.s --probes >build/logs/build-cpu.log 2>&1
 ./build/native/torch_probe cpu
 ./build/native/torch_checkpoint_fixtures build/fixtures
 run_without_python ./build/sputnik/torch.cpu_test build/logs/cpu-dylibs.log
-./tools/build tests/cpu.s --run-vm >build/logs/vm-cpu.log 2>&1
+build_test tests/cpu.s --run-vm >build/logs/vm-cpu.log 2>&1
 cat build/logs/vm-cpu.log
-./tools/build tests/modular_imports.s --run-vm >build/logs/vm-modules.log 2>&1
+build_test tests/modular_imports.s --run-vm >build/logs/vm-modules.log 2>&1
 cat build/logs/vm-modules.log
-./tools/build tests/direct_tensor_import.s --run-vm >build/logs/vm-direct-import.log 2>&1
+build_test tests/direct_tensor_import.s --run-vm >build/logs/vm-direct-import.log 2>&1
 cat build/logs/vm-direct-import.log
 for module_test in idioms auto_registration nn_catalog nn_families normalization spatial losses embeddings recurrent attention packed training data_loader materialization numerical indexing; do
-  ./tools/build "tests/$module_test.s" --run-vm >"build/logs/vm-$module_test.log" 2>&1
+  build_test "tests/$module_test.s" --run-vm >"build/logs/vm-$module_test.log" 2>&1
   cat "build/logs/vm-$module_test.log"
-  ./tools/build "tests/$module_test.s" >"build/logs/build-$module_test.log" 2>&1
+  build_test "tests/$module_test.s" >"build/logs/build-$module_test.log" 2>&1
   PATH=/nonexistent "./build/sputnik/torch.${module_test}_test"
 done
-./tools/build tests/serialization.s >build/logs/build-serialization.log 2>&1
+build_test tests/serialization.s >build/logs/build-serialization.log 2>&1
 PATH=/nonexistent ./build/sputnik/torch.serialization_test
 ./build/native/torch_checkpoint_fixtures verify build/fixtures/sputnik.pt
-./tools/build tests/distributed.s >build/logs/build-distributed.log 2>&1
+build_test tests/distributed.s >build/logs/build-distributed.log 2>&1
 ./build/native/torch-run --nproc 2 --timeout 60 ./build/sputnik/torch.distributed_test
-./tools/build tests/distributed_errors.s >build/logs/build-distributed-errors.log 2>&1
+build_test tests/distributed_errors.s >build/logs/build-distributed-errors.log 2>&1
 ./build/native/torch-run --nproc 2 --timeout 30 ./build/sputnik/torch.distributed_errors_test
-./tools/build tests/distributed_errors.s --run-vm >build/logs/vm-distributed-errors-bootstrap.log 2>&1 && {
+build_test tests/distributed_errors.s --run-vm >build/logs/vm-distributed-errors-bootstrap.log 2>&1 && {
   echo 'FAIL distributed initialization without launcher must fail' >&2; exit 1
 }
 /usr/bin/grep -q 'missing launcher variable: RANK' build/logs/vm-distributed-errors-bootstrap.log
@@ -58,14 +61,14 @@ if [ "${1:-}" = --mps ]; then
   run_without_python ./build/sputnik/torch.recurrent_test build/logs/recurrent-mps-dylibs.log --device mps
   run_without_python ./build/sputnik/torch.attention_test build/logs/attention-mps-dylibs.log --device mps
   run_without_python ./build/sputnik/torch.packed_test build/logs/packed-mps-dylibs.log --device mps
-  ./tools/build tests/mps.s >build/logs/build-mps.log 2>&1
+  build_test tests/mps.s >build/logs/build-mps.log 2>&1
   ./build/native/torch_probe mps
   PATH=/nonexistent ./build/sputnik/torch.mps_test
   for module_test in nn normalization spatial losses training numerical indexing; do
-    ./tools/build "tests/${module_test}_mps.s" >"build/logs/build-$module_test-mps.log" 2>&1
+    build_test "tests/${module_test}_mps.s" >"build/logs/build-$module_test-mps.log" 2>&1
     PATH=/nonexistent "./build/sputnik/torch.${module_test}_mps_test"
   done
-  ./tools/build examples/showcase.s >build/logs/build-showcase.log 2>&1
+  build_test examples/showcase.s >build/logs/build-showcase.log 2>&1
   if [ -f build/datasets/mnist/train-images-idx3-ubyte ]; then
     run_without_python ./build/sputnik/torch.showcase build/logs/showcase-dylibs.log \
       --epochs 1 --train-limit 256 --test-limit 128 --batch-size 64 \

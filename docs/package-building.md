@@ -93,6 +93,53 @@ registry selection, exact technical dependencies and variant/hash locks; see
 [native installation](../../sputnik-lang/docs/engineering/package-native-install-v1.md).
 Extracted local overrides and explicit provider bindings remain supported.
 
+## Local Linux ROCm builds
+
+For a local Linux ROCm C++ provider, `tools/build --torch-prefix DIR` detects
+`libtorch_hip.so` and `libc10_hip.so`, links those libraries explicitly and uses
+the selected `SPUTNIK_NATIVE_CXX`/`CXX` compiler. The adapter does not compile HIP
+kernels or invoke Python, nvcc or hipcc. The provider must supply LibTorch
+2.14.0 or 2.14.1 headers and shared libraries; runtime ROCm libraries remain
+dependencies of that provider.
+
+ROCm tensors use `device: "cuda:0"`, following
+[PyTorch HIP semantics](https://docs.pytorch.org/docs/stable/notes/hip.html).
+`torch.backends.rocm_built?` identifies a HIP build and `rocm_available?` also
+requires a visible GPU. The existing CUDA availability, count, synchronization
+and tensor APIs work on HIP builds. This local build path does not produce or
+publish a CUDA registry artifact.
+
+```sh
+tools/build tests/rocm.s --torch-prefix /path/to/libtorch --run-vm --no-notebook
+tools/build tests/rocm.s --torch-prefix /path/to/libtorch --no-notebook
+build/sputnik/torch.rocm_test
+```
+
+The ROCm test runs tensor placement, forward, backward, a training update,
+byte transfer, seeded generation and synchronization on the selected AMD GPU.
+Set `HIP_VISIBLE_DEVICES` to select a physical GPU; each invocation addresses
+the visible device as `cuda:0`.
+
+`tools/test-rocm --torch-prefix DIR --devices '0 1 2'` builds with full native
+coverage and tests each visible AMD device in VM and native modes. Native
+execution runs with an unavailable executable search path and rejects loaded
+`libpython` or `libtorch_python` libraries.
+
+For installation on the same server, a local prebuilt adapter package can be
+created and checked through an isolated package home:
+
+```sh
+tools/package --backend rocm --native prebuilt --modules source --bundle none \
+  --torch-prefix /path/to/libtorch --version 0.1.3-rocm-local \
+  --out-dir build/rocm-local-package
+```
+
+This package records the host provider path and hash, carries the Sputnik
+modules and adapter, and keeps LibTorch/ROCm external. It is not relocatable
+and is not a public registry artifact. Its preparation verifies an installed
+consumer in VM with the compiler disabled and in full native mode, including
+forward, backward and an SGD training update on AMD.
+
 ## Linux CUDA runtime package
 
 The CUDA recipe accepts exactly **LibTorch 2.14.0+cu130** and uses its C++

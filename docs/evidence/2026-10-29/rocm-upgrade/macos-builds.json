@@ -1,0 +1,216 @@
+{
+  "native": {
+    "status": "ok",
+    "root": "torch.cpu_test",
+    "target": "native",
+    "native_output": "/Users/slowpilot/workspace/sputnik/torch/build/sputnik/torch.cpu_test",
+    "native_backend": "cpp-bytecode-direct-v1",
+    "native_hash": "b707c6e94df3ab9d0d44afd4028e9cfc6ce02f270af578132eee9a7698ceb190",
+    "native_source": "/Users/slowpilot/workspace/sputnik/torch/build/sputnik/torch.cpu_test.native.cpp",
+    "native_cxx": "clang++",
+    "native_bytecode_fallback": false,
+    "native_graph_module_count": 39,
+    "native_graph_code_count": 1166,
+    "native_graph_native_code_count": 1166,
+    "native_graph_vm_fallback_code_count": 0,
+    "native_graph_fallback_code_count": 0,
+    "native_binary_size_bytes": 7849296,
+    "native_graph_body_coverage_full": true,
+    "native_graph_full_coverage": true,
+    "native_graph_runtime_bridge": false,
+    "native_graph_runtime_bridge_kind": "",
+    "native_graph_vm_independent": true,
+    "native_extensions": [
+      {
+        "name": "torch",
+        "sputnik_ext_abi_version": 1,
+        "target_triple": "aarch64-apple-darwin",
+        "native_source_sha256": "sha256:d1e8837e0cb1facd89a8dd8400c494334aa0be23b2d214b719d9fa026410ab21",
+        "exported_symbol_sha256": "sha256:efa4e185baafc4795685098c92a5ee2d67b6eae63ec3b51abaab8b2ea550e81a",
+        "types": [
+          {
+            "sputnik": "torch.distributed.core.GroupCore",
+            "tag": "torch.GroupCore",
+            "ownership": "owned",
+            "destructor": "amt_group_free"
+          },
+          {
+            "sputnik": "torch.random.core.GeneratorCore",
+            "tag": "torch.GeneratorCore",
+            "ownership": "collected",
+            "destructor": "amt_generator_free"
+          },
+          {
+            "sputnik": "torch.tensor.core.TensorCore",
+            "tag": "torch.TensorCore",
+            "ownership": "collected",
+            "destructor": "amt_tensor_free"
+          }
+        ],
+        "errors": [
+          {
+            "name": "Torch.Errors.AutogradError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.CheckpointError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.DTypeError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.DeviceError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.DistributedError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.Error",
+            "parent": "NativeError",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.ONNXError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.ReadOnlyTensorError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.ShapeError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          }
+        ]
+      }
+    ]
+  },
+  "mps": {
+    "status": "ok",
+    "root": "torch.mps_test",
+    "target": "native",
+    "native_output": "/Users/slowpilot/workspace/sputnik/torch/build/sputnik/torch.mps_test",
+    "native_backend": "cpp-bytecode-direct-v1",
+    "native_hash": "c6990f80271f4e5c31848b073ae8a98ac17b6f02d704f424fe8d3dc5a846c4a0",
+    "native_source": "/Users/slowpilot/workspace/sputnik/torch/build/sputnik/torch.mps_test.native.cpp",
+    "native_cxx": "clang++",
+    "native_bytecode_fallback": false,
+    "native_graph_module_count": 39,
+    "native_graph_code_count": 1166,
+    "native_graph_native_code_count": 1166,
+    "native_graph_vm_fallback_code_count": 0,
+    "native_graph_fallback_code_count": 0,
+    "native_binary_size_bytes": 7882320,
+    "native_graph_body_coverage_full": true,
+    "native_graph_full_coverage": true,
+    "native_graph_runtime_bridge": false,
+    "native_graph_runtime_bridge_kind": "",
+    "native_graph_vm_independent": true,
+    "native_extensions": [
+      {
+        "name": "torch",
+        "sputnik_ext_abi_version": 1,
+        "target_triple": "aarch64-apple-darwin",
+        "native_source_sha256": "sha256:d1e8837e0cb1facd89a8dd8400c494334aa0be23b2d214b719d9fa026410ab21",
+        "exported_symbol_sha256": "sha256:efa4e185baafc4795685098c92a5ee2d67b6eae63ec3b51abaab8b2ea550e81a",
+        "types": [
+          {
+            "sputnik": "torch.distributed.core.GroupCore",
+            "tag": "torch.GroupCore",
+            "ownership": "owned",
+            "destructor": "amt_group_free"
+          },
+          {
+            "sputnik": "torch.random.core.GeneratorCore",
+            "tag": "torch.GeneratorCore",
+            "ownership": "collected",
+            "destructor": "amt_generator_free"
+          },
+          {
+            "sputnik": "torch.tensor.core.TensorCore",
+            "tag": "torch.TensorCore",
+            "ownership": "collected",
+            "destructor": "amt_tensor_free"
+          }
+        ],
+        "errors": [
+          {
+            "name": "Torch.Errors.AutogradError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.CheckpointError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.DTypeError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.DeviceError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.DistributedError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.Error",
+            "parent": "NativeError",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.ONNXError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.ReadOnlyTensorError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          },
+          {
+            "name": "Torch.Errors.ShapeError",
+            "parent": "Torch.Errors.Error",
+            "default_message": "",
+            "default_exit_code": ""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -311,6 +311,8 @@ SputnikStatus amt_info(SputnikCtx *cx, const SputnikValue *a, size_t n, SputnikV
       *out = sputnik_make_bool(cx, at::getNumGPUs() > 0);
     else if (key == "cuda_device_count")
       *out = sputnik_make_int(cx, at::getNumGPUs());
+    else if (key == "rocm_built")
+      *out = sputnik_make_bool(cx, at::globalContext().hasROCM());
     else if (key == "synchronize") {
       synchronize_devices();
       *out = sputnik_make_null(cx);

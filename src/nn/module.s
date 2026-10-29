@@ -84,7 +84,7 @@ class Module:
         result["#{name}.#{key}"] = value
     result
 
-  def state_dict(): named_parameters.merge(named_buffers).transform_values: $it.snapshot
+  def state_dict(): named_parameters.merge(named_buffers).transformed_values: $it.snapshot
 
   def load_state_dict!(state):
     named = named_parameters.merge(named_buffers)

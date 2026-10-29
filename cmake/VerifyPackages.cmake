@@ -105,6 +105,10 @@ foreach(index IN LISTS indices)
     math(EXPR full_native_count "${full_native_count}+1")
   endif()
 endforeach()
+# Exercise shared installation from a clean consumer directory as well as the
+# relocated package overrides above. Runtime must use the prepared adapter.
+run(cmake "-DROOT=${ROOT}" "-DPACKAGES=${PACKAGES}" "-DSPUTNIK_ROOT=${SPUTNIK_ROOT}"
+  -P "${ROOT}/tests/package_install.cmake")
 # Prove source packing has no SDK/compiler/backend dependency and is reproducible.
 run(cmake -E env LIBTORCH_PREFIX=/sdk-must-not-exist SPUTNIK_NATIVE_CXX=/compiler-must-not-run
   "${ROOT}/tools/package" --out-dir "${work}/slim-repack" --version "${version}"

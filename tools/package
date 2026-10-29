@@ -27,7 +27,7 @@ while [ "$#" -gt 0 ]; do
     --sputnik-root) shift; sputnik_root=$1 ;;
     --version) shift; version=$1 ;;
     --out-dir) shift; output=$1 ;;
-    --help) echo 'usage: tools/package [--matrix] [--package-ref publisher/torch] [--backend cuda --cuda-devices "1;2"] [--native source|prebuilt] [--modules source|bytecode|mixed] [--bundle none|runtime|sdk] [--provider-spec FILE] [--torch-prefix DIR] [--sputnik-root DIR] [--version VERSION] [--out-dir DIR]'; exit 0 ;;
+    --help) echo 'usage: tools/package [--matrix] [--package-ref publisher/torch] [--backend cuda|rocm] [--cuda-devices "1;2"] [--native source|prebuilt] [--modules source|bytecode|mixed] [--bundle none|runtime|sdk] [--provider-spec FILE] [--torch-prefix DIR] [--sputnik-root DIR] [--version VERSION] [--out-dir DIR]'; exit 0 ;;
     *) echo "unknown package option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -38,7 +38,15 @@ if [ "$backend" = cuda ]; then
     "-DNATIVE_MODE=$native_mode" "-DBUNDLE=$bundle" "-DMATRIX=$matrix" \
     "-DPACKAGE_VERSION=$version" "-DOUTPUT=$output" -P "$root/cmake/PackageCuda.cmake"
 fi
-if [ -n "$backend" ]; then echo 'Only --backend cuda is supported by the Linux recipe' >&2; exit 2; fi
+if [ "$backend" = rocm ]; then
+  if [ "$native_mode" != prebuilt ] || [ "$module_mode" != source ] || [ "$bundle" != none ] || [ "$matrix" != OFF ] || [ "$package_ref" != torch ]; then
+    echo 'Local ROCm packaging requires --native prebuilt --modules source --bundle none --package-ref torch' >&2
+    exit 2
+  fi
+  exec cmake "-DROOT=$root" "-DSPUTNIK_ROOT=$sputnik_root" "-DTORCH_PREFIX=$torch_prefix" \
+    "-DPACKAGE_VERSION=$version" "-DOUTPUT=$output" -P "$root/cmake/PackageRocmLocal.cmake"
+fi
+if [ -n "$backend" ]; then echo 'Linux recipes support --backend cuda or rocm' >&2; exit 2; fi
 case "$native_mode" in source|prebuilt) ;; *) echo 'invalid --native' >&2; exit 2 ;; esac
 case "$module_mode" in source|bytecode|mixed) ;; *) echo 'invalid --modules' >&2; exit 2 ;; esac
 case "$bundle" in none|runtime|sdk) ;; *) echo 'invalid --bundle' >&2; exit 2 ;; esac

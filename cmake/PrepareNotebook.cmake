@@ -47,7 +47,7 @@ function(prepare_notebook_bundle)
   json_array(values ${package_headers} "${build}/native-lock.json")
   string(JSON prepared_extension SET "${prepared_extension}" headers "${values}")
   set(inputs ${package_sources} ${cpp_sources} ${cpp_headers} "${ROOT}/tools/notebook_abi.cpp"
-    "${ROOT}/CMakeLists.txt" "${ROOT}/cmake/PrepareNotebook.cmake" "${ROOT}/cmake/BuildJson.cmake" "${build}/native-lock.json")
+    "${ROOT}/CMakeLists.txt" "${ROOT}/cmake/PrepareNotebook.cmake" "${ROOT}/cmake/BuildJson.cmake" "${ROOT}/cmake/TorchProvider.cmake" "${build}/native-lock.json")
   list(SORT inputs)
   set(input_hashes "{}")
   foreach(input IN LISTS inputs)
@@ -62,7 +62,7 @@ function(prepare_notebook_bundle)
   if(NOT EXISTS "${bundle}/artifact.json")
     # Use a separate build tree: never overwrite a library already mapped by a worker.
     run(cmake -S "${ROOT}" -B "${build}/notebook-native" -G Ninja "-DCMAKE_PREFIX_PATH=${TORCH_PREFIX}"
-      "-DSPUTNIK_ROOT=${SPUTNIK_ROOT}" "-DGLOO_INCLUDE_DIR=${gloo}" -DCMAKE_BUILD_TYPE=Release)
+      "-DSPUTNIK_ROOT=${SPUTNIK_ROOT}" "-DGLOO_INCLUDE_DIR=${gloo}" ${provider_options} -DCMAKE_BUILD_TYPE=Release)
     run(cmake --build "${build}/notebook-native" --target torch_notebook -j 2)
     string(RANDOM LENGTH 12 ALPHABET 0123456789abcdef suffix)
     set(stage "${directory}/stage-${suffix}")
