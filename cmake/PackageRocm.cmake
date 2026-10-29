@@ -98,7 +98,7 @@ file(READ "${ROOT}/tests/rocm_package_check.s" check_source)
 string(REPLACE "from torch." "from ${module_prefix}torch." check_source "${check_source}")
 file(WRITE "${consumer}/check.s" "${check_source}")
 run(cmake -E env --unset=LD_LIBRARY_PATH "SPUTNIK_PKG_HOME=${installed_home}" "SPUTNIK_NATIVE_CXX=/compiler-must-not-run"
-  "${SPUTNIK_ROOT}/build/sputnik" pkg install "${artifact}" --variant "${variant}" --allow-native --allow-native-large)
+  "${SPUTNIK_ROOT}/build/sputnik" pkg install "${artifact}" --variant "${variant}" --bundle runtime --allow-native --allow-native-large)
 run(cmake -E env --unset=LD_LIBRARY_PATH "SPUTNIK_PKG_HOME=${installed_home}"
   "${SPUTNIK_ROOT}/build/sputnik" pkg lock "${consumer}/check.s" --variant "${PACKAGE_REF}=${variant}")
 execute_process(COMMAND cmake -E env --unset=LD_LIBRARY_PATH "SPUTNIK_PKG_HOME=${installed_home}"
