@@ -11,7 +11,7 @@ native def _execution_batch(block, mode as Int) from "amt_execution_batch" block
 
 # Execute the Sputnik callback on one blocking FFI worker in native programs.
 # Nested tensor calls reuse that worker. Task locals and faults follow the block.
-def execution_batch(&block): _execution_batch(block, execution_mode())
+def execution_batch(&block): _execution_batch((&block), execution_mode())
 
 def version(): _info("version")
 def mps_built?(): _info("mps_built")
@@ -20,7 +20,7 @@ def cuda_built?(): _info("cuda_built")
 def cuda_available?(): _info("cuda_available")
 def cuda_device_count(): _info("cuda_device_count")
 def rocm_built?(): _info("rocm_built")
-def rocm_available?(): rocm_built?() and cuda_available?()
+def rocm_available?(): rocm_built? and cuda_available?
 def synchronize(): _synchronize()
 
 def num_threads(): _info("num_threads")

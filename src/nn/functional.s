@@ -248,7 +248,7 @@ def triplet_margin_with_distance_loss(anchor, positive, negative,
   raise ValueError("triplet margin must be positive") unless margin > 0
   unless anchor.rank == positive.rank and positive.rank == negative.rank:
     raise ValueError("triplet inputs must have the same rank")
-  distance = if distance_function == null then &pairwise_distance else distance_function
+  distance = if &distance_function == null then &pairwise_distance else &distance_function
   pos = distance(anchor, positive)
   neg = distance(anchor, negative)
   neg = kernel("minimum", [neg, distance(positive, negative)]) if swap

@@ -44,26 +44,26 @@ def _bounded_first(loader, count, fetched):
 def _ordering():
   dataset = ItemsDataset([0, 1, 2, 3, 4])
   identity = |samples|: samples
-  loader = DataLoader(dataset, batch_size: 2, collate: identity, num_workers: 2)
+  loader = DataLoader(dataset, batch_size: 2, collate: &identity, num_workers: 2)
   check(loader.count == 3 and (loader.map: $it) == [[0, 1], [2, 3], [4]],
     "ordered parallel batches and partial tail")
   check((loader.map: $it) == [[0, 1], [2, 3], [4]], "fresh iteration state")
-  dropped = DataLoader(dataset, batch_size: 2, collate: identity,
+  dropped = DataLoader(dataset, batch_size: 2, collate: &identity,
     num_workers: 2, prefetch_factor: 1, drop_last: true)
   check(dropped.count == 2 and (dropped.map: $it) == [[0, 1], [2, 3]], "parallel drop_last")
   sampler = RandomSampler(5, seed: 7)
-  shuffled = DataLoader(dataset, batch_size: 2, sampler:, collate: identity, num_workers: 2)
-  synchronous = DataLoader(dataset, batch_size: 2, sampler:, collate: identity)
+  shuffled = DataLoader(dataset, batch_size: 2, sampler:, collate: &identity, num_workers: 2)
+  synchronous = DataLoader(dataset, batch_size: 2, sampler:, collate: &identity)
   check((shuffled.map: $it) == (synchronous.map: $it), "sampler order survives parallel collation")
   sampler.set_epoch!(1)
   check((shuffled.map: $it) == (synchronous.map: $it), "explicit sampler epoch")
   check(DataLoader(ItemsDataset([]), num_workers: 20).count == 0, "empty indexed loader")
   check((DataLoader(ItemsDataset([]), num_workers: 20).map: $it) == [], "empty iteration")
-  check((DataLoader(dataset, collate: identity, num_workers: 32).map: $it) == [[0], [1], [2], [3], [4]],
+  check((DataLoader(dataset, collate: &identity, num_workers: 32).map: $it) == [[0], [1], [2], [3], [4]],
     "more worker lanes than batches")
   many = ItemsDataset(Array.of(64): $it)
   expected = Array.of(64): $it
-  check((DataLoader(many, collate: identity, num_workers: 32).map: $it[0]) == expected,
+  check((DataLoader(many, collate: &identity, num_workers: 32).map: $it[0]) == expected,
     "worker lanes exceeding scheduler threads do not park idle workers")
   check((DataLoader(dataset, collate: |samples|: null, num_workers: 2).map: $it) == [null, null, null, null, null],
     "null is a valid custom batch")
@@ -95,7 +95,7 @@ def _parallel_and_bounded():
     else:
       later.send(true)
     samples
-  loader = DataLoader(ItemsDataset([0, 1]), collate:, num_workers: 2, prefetch_factor: 1)
+  loader = DataLoader(ItemsDataset([0, 1]), collate: &collate, num_workers: 2, prefetch_factor: 1)
   check((loader.map: $it) == [[0], [1]], "two workers execute concurrently and deliver sampler order")
   fetched = Channel.new(capacity: 4)
   count = Atomic.new(0)
@@ -103,7 +103,7 @@ def _parallel_and_bounded():
     count.update: $it + 1
     fetched.send(true)
     samples
-  bounded = DataLoader(ItemsDataset(Array.of(20): $it), collate: counted,
+  bounded = DataLoader(ItemsDataset(Array.of(20): $it), collate: &counted,
     num_workers: 2, prefetch_factor: 2)
   first = _bounded_first(bounded, count, fetched)
   check(first == [0] and count.get == 4, "early return joins workers without extra dataset reads")
@@ -147,7 +147,7 @@ def _failures_and_cleanup():
           samples
         ensure:
           active.update: $it - 1
-    loader = DataLoader(ItemsDataset([0, 1]), collate:, num_workers: 2, prefetch_factor: 1)
+    loader = DataLoader(ItemsDataset([0, 1]), collate: &collate, num_workers: 2, prefetch_factor: 1)
     caught = false
     try:
       if mode == :early:

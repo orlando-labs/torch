@@ -2,7 +2,7 @@ from torch.tensor.factories import tensor
 from torch.backends import version, rocm_available?, synchronize
 from torch.optim.sgd import SGD
 
-raise ValueError("ROCm unavailable") unless rocm_available?()
+raise ValueError("ROCm unavailable") unless rocm_available?
 x = tensor([1.0, 2.0, 3.0], device: "cuda:0", requires_grad: true)
 loss = x.square.sum
 loss.backward!
@@ -20,7 +20,7 @@ optimizer = SGD([weight], lr: 0.05)
   error.backward!
   optimizer.step!
 raise ValueError("AMD training update") unless (weight.item - 3.0).abs < 0.0001
-synchronize()
-message = "PASS ROCm LibTorch #{version()} forward=14 gradient=[2,4,6] matmul=OK trained_weight=#{weight.item}"
+synchronize
+message = "PASS ROCm LibTorch #{version} forward=14 gradient=[2,4,6] matmul=OK trained_weight=#{weight.item}"
 print message
 message

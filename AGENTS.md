@@ -19,8 +19,11 @@ Python must never be a package, build, code generation or test dependency.
   `optimizer.zero_grad!`, `batches.each |batch|:`. This includes mutating
   methods and calls accepting a block. Keep `!` for mutation. Sputnik
   permits this form whenever a method accepts zero arguments, including
-  default-argument methods and empty rest parameters. Calling a lexical
-  function value requires parentheses. Constructors and declarations retain `()`.
+  default-argument methods and empty rest parameters. Bare function-valued
+  identifiers also invoke, including imports, parameters and callback locals.
+  Use `&f` to read/pass/store the function without invoking; use `apply((&f))`
+  for a positional argument, distinct from block-pass `apply(&f)`. Constructors and
+  declarations retain `()`.
 - Prefer blocks, `times`, `Array.of`, tuple patterns and collection operations
   over manual counters when they make the algorithm clearer. Do not add
   indirection solely to shorten a line. Break long argument lists naturally.

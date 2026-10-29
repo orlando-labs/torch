@@ -210,7 +210,7 @@ def run(device):
     "threaded vectorized tensor batches preserve order and tail")
   check(DataLoader(dataset, batch_size: 2, drop_last: true).count == 2, "drop last")
   count_samples = |samples|: samples.count
-  custom = DataLoader(dataset, batch_size: 2, collate: count_samples)
+  custom = DataLoader(dataset, batch_size: 2, collate: &count_samples)
   check((custom.map: $it) == [2, 2, 1], "custom collation bypasses tensor batching")
   subset = Subset(dataset, [4, 1])
   joined = ConcatDataset([subset, dataset])

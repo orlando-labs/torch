@@ -32,8 +32,8 @@ class DataLoader:
       RandomSampler(dataset.count, seed:)
     else:
       SequentialSampler(dataset.count)
-    @collate = if collate == null then &default_collate else collate
-    @tensor_batches = collate == null and TensorDataset === dataset
+    @collate = if &collate == null then &default_collate else &collate
+    @tensor_batches = &collate == null and TensorDataset === dataset
 
   def count():
     raise TypeError("streaming DataLoader has no known length") if @streaming
@@ -43,8 +43,8 @@ class DataLoader:
     if @drop_last then size // @batch_size else (size + @batch_size - 1) // @batch_size
 
   def each(&block):
-    raise ValueError("DataLoader.each requires a block") if block == null
-    return _each_prefetched(block) if @num_workers > 0
+    raise ValueError("DataLoader.each requires a block") if &block == null
+    return _each_prefetched((&block)) if @num_workers > 0
     if @streaming:
       self._stream_batches |samples|: block(@collate(samples))
       return self
