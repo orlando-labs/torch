@@ -169,7 +169,7 @@ tools/package --backend rocm --native prebuilt --modules source --bundle runtime
   --package-ref slowpilot/torch --version 0.1.3 \
   --torch-prefix /path/to/libtorch --out-dir build/registry-013-rocm
 sputnik pkg install slowpilot/torch --version 0.1.3 \
-  --variant linux-x86_64-gnu-rocm643-prebuilt-source-runtime \
+  --variant linux-x86_64-gnu-rocm643-prebuilt-source-runtime --bundle runtime \
   --allow-native --allow-native-large
 ```
 
