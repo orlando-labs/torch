@@ -22,7 +22,7 @@ class Module:
     # multiple automatic fields can still refer to the same child.
     registered = @modules.values
     instance_fields.each |name, child|:
-      register_module!(name, child) if (Module === child) and not registered.include?(child)
+      register_module!(name, (&child)) if (Module === &child) and not registered.include?((&child))
     self
 
   attr training? from @training

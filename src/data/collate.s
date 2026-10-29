@@ -17,7 +17,7 @@ def default_collate(samples):
       default_collate(column)
     if Tuple === first then values.tuple else values
   else if Map === first:
-    first.transform |name, value|:
+    first.transformed |name, value|:
       column = samples.map: $it[name]
       (name, default_collate(column))
   else:
