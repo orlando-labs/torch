@@ -54,7 +54,7 @@ def main():
     api.request("PUT", route + "/worker-settings/main", {command_id: SecureRandom.hex(16), base_version: settings[:version], runtime_epoch: settings[:runtime_epoch], grants: ["ffi.call", "ffi.load"]})
     before = api.request("GET", route + "/dependencies")
     raise IOError("New project already has packages") unless before[:packages].empty?
-    accepted = api.request("POST", route + "/dependencies", {command_id: SecureRandom.hex(16), action: "install_sputnik", source: "slowpilot/torch", version: args[:version], variant: args[:variant], bundle: "runtime", allow_native: true, allow_native_large: true})
+    accepted = api.request("POST", route + "/dependencies", {command_id: SecureRandom.hex(16), action: "install_sputnik", source: "slowpilot/torch", version: args[:version], variant: args[:variant], backend: "rocm", bundle: "runtime", allow_native: true, allow_native_large: true})
     installed = api.wait(route + "/dependencies/" + accepted[:id], ["succeeded", "failed", "interrupted"])
     raise IOError("ROCm package install failed: #{Json.generate(installed)}") unless installed[:state] == "succeeded"
     inventory = api.request("GET", route + "/dependencies")

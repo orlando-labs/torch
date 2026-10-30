@@ -169,13 +169,14 @@ tools/package --backend rocm --native prebuilt --modules source --bundle runtime
   --package-ref slowpilot/torch --version 0.1.3 \
   --torch-prefix /path/to/libtorch --out-dir build/registry-013-rocm
 sputnik pkg install slowpilot/torch --version 0.1.3 \
-  --variant linux-x86_64-gnu-rocm643-prebuilt-source-runtime --bundle runtime \
+  --backend rocm --bundle runtime \
   --allow-native --allow-native-large
 ```
 
-Select this variant explicitly: package-format v1 does not expose a generic
-ROCm backend selector. The native provider records the exact ROCm LibTorch ABI
-and content hash. On gfx906, retain `ROCBLAS_TENSILE_LIBPATH` if the system
+The package manager selects this variant with `--backend rocm` and verifies a
+visible GPU through the installed HIP C runtime. CPU installs do not select a
+ROCm-only variant. The native provider records the exact ROCm LibTorch ABI and
+content hash. On gfx906, retain `ROCBLAS_TENSILE_LIBPATH` if the system
 rocBLAS installation lacks its kernel data. The package uses Sputnik's current
 bare function semantics; callback references use `&name`.
 
