@@ -32,7 +32,7 @@ class CoreClient:
   def close!(): @http.close!
 
 def main():
-  parser = ArgParser(name: "Verify local ROCm package through remote core")
+  parser = ArgParser(name: "Verify registry ROCm package through remote core")
   parser.arg("--url", required: true)
   parser.arg("--token-file", required: true)
   parser.arg("--version", default: "0.1.3")
@@ -54,7 +54,7 @@ def main():
     api.request("PUT", route + "/worker-settings/main", {command_id: SecureRandom.hex(16), base_version: settings[:version], runtime_epoch: settings[:runtime_epoch], grants: ["ffi.call", "ffi.load"]})
     before = api.request("GET", route + "/dependencies")
     raise IOError("New project already has packages") unless before[:packages].empty?
-    accepted = api.request("POST", route + "/dependencies", {command_id: SecureRandom.hex(16), action: "install_sputnik", source: "slowpilot/torch", version: args[:version], variant: args[:variant], backend: "rocm", bundle: "runtime", allow_native: true, allow_native_large: true})
+    accepted = api.request("POST", route + "/dependencies", {command_id: SecureRandom.hex(16), action: "install_sputnik", source: "slowpilot/torch", version: args[:version], allow_native: true, allow_native_large: true})
     installed = api.wait(route + "/dependencies/" + accepted[:id], ["succeeded", "failed", "interrupted"])
     raise IOError("ROCm package install failed: #{Json.generate(installed)}") unless installed[:state] == "succeeded"
     inventory = api.request("GET", route + "/dependencies")
@@ -67,7 +67,7 @@ def main():
     value = result[:result][:cells][0][:result]
     raise IOError("AMD training result was not verified") unless value.contains?("PASS ROCm") and value.contains?("forward=14 gradient=[2,4,6]")
     raise IOError("Receipt replay changed RunId") unless api.request("POST", route + "/runs", body) == accepted_run
-    report.merge!({verified: true, run_id: accepted_run[:run_id], receipt_replay_same_run: true, "package": installed_package, result: value})
+    report.merge!({verified: true, lock_required: false, run_id: accepted_run[:run_id], receipt_replay_same_run: true, "package": installed_package, result: value})
   ensure:
     if created:
       api.request("DELETE", route, {command_id: SecureRandom.hex(16)})

@@ -171,6 +171,8 @@ tools/package --backend rocm --native prebuilt --modules source --bundle runtime
 sputnik pkg install slowpilot/torch --version 0.1.3 \
   --backend rocm --bundle runtime \
   --allow-native --allow-native-large
+sputnik pkg lock check.s --backend rocm \
+  --variant slowpilot/torch=linux-x86_64-gnu-rocm643-prebuilt-source-runtime
 ```
 
 The package manager selects this variant with `--backend rocm` and verifies a
@@ -179,6 +181,13 @@ ROCm-only variant. The native provider records the exact ROCm LibTorch ABI and
 content hash. On gfx906, retain `ROCBLAS_TENSILE_LIBPATH` if the system
 rocBLAS installation lacks its kernel data. The package uses Sputnik's current
 bare function semantics; callback references use `&name`.
+
+Installation and imports automatically select a compatible GPU/runtime variant.
+The backend, bundle and variant options above are explicit overrides; they are
+not required on a compatible AMD host. `sputnik.lock` is optional and pins exact
+versions, variants and hashes for reproducibility. `tests/registry_rocm_remote.s`
+installs into a fresh remote project without backend/bundle/variant overrides,
+uploads no lock, and verifies GPU training and receipt replay before cleanup.
 
 ## Linux CUDA runtime package
 
@@ -191,7 +200,7 @@ NVML indices with CUDA ordinals.
 
 ```sh
 tools/package --backend cuda --native prebuilt --modules source --bundle runtime \
-  --package-ref slowpilot/torch --version 0.1.2 --cuda-devices '1;2' \
+  --package-ref slowpilot/torch --version 0.1.3 --cuda-devices '1;2' \
   --torch-prefix /absolute/libtorch-2.14.0-cu130 --sputnik-root ../sputnik-lang \
   --out-dir /absolute/packages
 ```
@@ -225,13 +234,13 @@ same scoped module declarations and error classes as the CUDA release. For a
 prebuilt CPU/MPS runtime package and a thin native-source package:
 
 ```sh
-tools/package --package-ref slowpilot/torch --version 0.1.2 \
+tools/package --package-ref slowpilot/torch --version 0.1.3 \
   --native prebuilt --modules source --bundle runtime \
-  --out-dir build/registry-012-macos-20261022
-tools/package --package-ref slowpilot/torch --version 0.1.2 \
+  --out-dir build/registry-013-macos-20261029
+tools/package --package-ref slowpilot/torch --version 0.1.3 \
   --native source --modules source --bundle none \
-  --provider-spec build/registry-012-macos-20261022/provider-spec.cmake \
-  --out-dir build/registry-012-source-20261022
+  --provider-spec build/registry-013-macos-20261029/provider-spec.cmake \
+  --out-dir build/registry-013-source-20261029
 ```
 
 The prebuilt runtime needs no consumer C++ compiler or SDK. The thin source
@@ -241,8 +250,8 @@ SDK/runtime build requirements are checked before compilation. Use prepared
 providers from the matching local dependency build:
 
 ```sh
-export SPUTNIK_NATIVE_PROVIDERS="$(pwd)/build/registry-012-macos-20261022/providers/runtime:$(pwd)/build/registry-012-macos-20261022/providers/sdk"
-sputnik pkg install torch --version 0.1.2 \
+export SPUTNIK_NATIVE_PROVIDERS="$(pwd)/build/registry-013-macos-20261029/providers/runtime:$(pwd)/build/registry-013-macos-20261029/providers/sdk"
+sputnik pkg install torch --version 0.1.3 \
   --variant macos-aarch64-source-source-none --allow-native --build-from-source
 ```
 
